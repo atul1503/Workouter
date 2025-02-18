@@ -7,6 +7,8 @@ import android.util.Log
 import android.view.autofill.AutofillManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -139,8 +141,10 @@ fun RestScreen(vm: viewModel) {
     @Composable
     fun ExerciseTimer(vm: viewModel,time: Int?) {
         var curr = remember {
-            mutableStateOf(0)
+            mutableStateOf(0f)
         };
+
+        var animatedCurr= animateFloatAsState(targetValue = curr.value, animationSpec = tween(1600))
 
         LaunchedEffect(key1 = Unit, block = {
             launch(Dispatchers.IO) {
@@ -161,7 +165,7 @@ fun RestScreen(vm: viewModel) {
                     color=Color.Cyan,
                     size = Size(200f, 200f),
                     startAngle = 90f,
-                    sweepAngle = 360f * (1-(curr.value.toFloat() / time!!)),
+                    sweepAngle = 360f * (1-(animatedCurr.value / time!!)),
                     useCenter = true,
                 )
             }
