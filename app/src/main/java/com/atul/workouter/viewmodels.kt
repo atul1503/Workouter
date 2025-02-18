@@ -14,6 +14,7 @@ class viewModel: ViewModel() {
     var currentExerciseIndex=mutableStateOf(0)
     var currentExerciseTimerStatus=mutableStateOf(TimerStatus.NOT_STARTED)
     var exercisesGettingCreatedNow=mutableStateOf(listOf<Exercise>(Exercise()))
+    var isOnRest=mutableStateOf(false)
 
     enum class TimerStatus{
         STARTED,
