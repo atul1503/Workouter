@@ -9,13 +9,17 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -30,6 +34,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
@@ -43,6 +48,7 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawStyle
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.platform.LocalConfiguration
 import java.util.Date
 
 class MainActivity : AppCompatActivity() {
@@ -108,10 +114,14 @@ fun RestScreen(vm: viewModel) {
     val exercise=vm.getExercisesThatCanBeDoneToday()[vm.currentExerciseIndex.value]
     val rest=exercise.rest
     ExerciseTimer(vm = vm, time = rest.toInt())
-    Text(modifier =Modifier.offset(50.dp,50.dp), text = "Relax take some rest")
+    Box(modifier = Modifier.fillMaxWidth()) {
+        Text(modifier = Modifier
+            .align(Alignment.Center)
+            .offset(0.dp, 200.dp), text = "Relax! Take some rest")
+    }
     LaunchedEffect(key1 = Unit, block = {
         launch(Dispatchers.IO) coroutine@{
-            Log.d("RestScreen", "This is the current exercise index: ${vm.currentExerciseIndex.value}, ${vm.getExercisesThatCanBeDoneToday().size}, ${vm.isOnRest.value}")
+            //Log.d("RestScreen", "This is the current exercise index: ${vm.currentExerciseIndex.value}, ${vm.getExercisesThatCanBeDoneToday().size}, ${vm.isOnRest.value}")
             if(vm.isOnRest.value){
                 vm.isOnRest.value=false
                 vm.currentExerciseIndex.value += 1
@@ -120,6 +130,10 @@ fun RestScreen(vm: viewModel) {
             }
             vm.isOnRest.value=true
             if (vm.getExercisesThatCanBeDoneToday().size-1 == vm.currentExerciseIndex.value) {
+                while (vm.currentExerciseTimerStatus.value != viewModel.TimerStatus.STOPPED) {
+                    //Log.d("RestScreen","Waiting for timer to stop")
+                    Thread.sleep(500)
+                }
                 vm.changeNavigationString("home")
                 vm.setRoutineLastDoneDateAndLastDoneFrequency(vm.getCurrentRoutine(), exercise)
                 vm.currentExerciseIndex.value=0
@@ -144,7 +158,7 @@ fun RestScreen(vm: viewModel) {
             mutableStateOf(0f)
         };
 
-        var animatedCurr= animateFloatAsState(targetValue = curr.value, animationSpec = tween(1600))
+        var animatedCurr= animateFloatAsState(targetValue = curr.value, animationSpec = tween(1500))
 
         LaunchedEffect(key1 = Unit, block = {
             launch(Dispatchers.IO) {
@@ -158,18 +172,22 @@ fun RestScreen(vm: viewModel) {
             }
         })
 
-        Box() {
-            Canvas(modifier = Modifier.size(200.dp)) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            val arcSize= LocalConfiguration.current.screenWidthDp
+            Canvas(modifier = Modifier
+                .size(arcSize.dp)
+                .align(Alignment.Center)) {
                 //Log.d("ExerciseTimer", "This is the sweep angle: ${360f * (1-(curr.value.toFloat() / time!!))}")
                 drawArc(
                     color=Color.Cyan,
-                    size = Size(200f, 200f),
+                    size = Size(arcSize.toFloat(), arcSize.toFloat()),
+                    topLeft = Offset((size.width-arcSize)/2, (size.height-arcSize)/2),
                     startAngle = 90f,
                     sweepAngle = 360f * (1-(animatedCurr.value / time!!)),
                     useCenter = true,
                 )
             }
-            Text(modifier = Modifier.offset(95.dp,95.dp),text="${time!!-curr.value}")
+            Text(modifier = Modifier.align(Alignment.Center),text="${time!!-curr.value}")
         }
 
     }
@@ -179,11 +197,22 @@ fun RestScreen(vm: viewModel) {
         val exercise = vm.getExercisesThatCanBeDoneToday()[vm.currentExerciseIndex.value]
         if (exercise.isTimed) {
             ExerciseTimer(vm,exercise.time)
-            Text(modifier = Modifier.offset(50.dp,50.dp), text = "Exercise name: ${exercise.name}")
+            vm.isOnRest.value=false
+            Box(modifier = Modifier
+                .fillMaxWidth()
+            ) {
+                Text(
+                    modifier = Modifier.align(Alignment.Center),
+                    text = "Exercise name: ${exercise.name}"
+                )
+            }
         } else {
             Column() {
-                Text("Exercise Steps: ${exercise.steps}")
-                Text("Exercise Sets: ${exercise.sets}")
+                Text("Exercise Steps:")
+                for (step in exercise.steps) {
+                    Text(step)
+                }
+                Text("Total exercise Sets: ${exercise.sets}")
                 Text("Exercise Rest: ${exercise.rest}")
                 Text("Exercise Reps: ${exercise.reps}")
                 vm.isOnRest.value=false
@@ -200,7 +229,7 @@ fun RestScreen(vm: viewModel) {
     @Composable
     fun StartExercisesFromRoutine(vm: viewModel) {
         if(vm.currentExerciseIndex.value >= vm.getExercisesThatCanBeDoneToday().size){
-            Log.d("RestScreen","Sending back to home")
+            //Log.d("RestScreen","Sending back to home")
             vm.changeNavigationString("home")
             vm.currentExerciseIndex.value=0
             return
@@ -242,7 +271,7 @@ fun RestScreen(vm: viewModel) {
                 val routineLastFreq = currentRoutine.lastDoneFrequency
                 exercises = exercises.sortedBy { it.frequency }
                 Log.d("RoutineStarter", "This is the routine exercises: ${exercises}")
-                if (routineLastDay == null) {
+                if (routineLastDay == null || vm.allowForceRoutine.value) {
                     //filter out exercises which have frequency more than the lowest freuqnecy exercise
                     val lowestFrequency = exercises[0].frequency
                     exercisesThatCanBeDoneToday.addAll(exercises.filter { it.frequency == lowestFrequency })
@@ -252,7 +281,7 @@ fun RestScreen(vm: viewModel) {
                     return@checker
                 }
                 //remove all those exercises with last frequency less than the routine last frequency and also remove those exercises whose frequency if you add with last routine date it is after today
-                Log.d("RoutineStarter", "Get current routine: ${currentRoutine}")
+                //Log.d("RoutineStarter", "Get current routine: ${currentRoutine}")
                 exercisesThatCanBeDoneToday.addAll(exercises.filter { it.frequency >= routineLastFreq && it.frequency * 84_400_000L + routineLastDay.time <= System.currentTimeMillis() })
                 Log.d("RoutineStarter", "These are the exercises that can be done today: ${exercisesThatCanBeDoneToday}")
 
@@ -458,6 +487,7 @@ fun RestScreen(vm: viewModel) {
     @Composable
     fun RoutineView(routine: Routine, vm: viewModel) {
 
+        var isForceRoutine=vm.allowForceRoutine
         var exercises = remember { mutableStateListOf<Exercise>() }
         LaunchedEffect(key1 = routine.name, block = {
             launch(Dispatchers.IO) {
@@ -467,7 +497,7 @@ fun RestScreen(vm: viewModel) {
             }
         })
 
-        Column() {
+        Column {
             Text("Routine name: ${routine.name}")
             Text("Description: ${routine.description}")
             for (ex in exercises) {
@@ -481,6 +511,8 @@ fun RestScreen(vm: viewModel) {
             }) {
                 Text("Start routine")
             }
+            Checkbox(checked = isForceRoutine.value, onCheckedChange = { isForceRoutine.value = it;vm.allowForceRoutine.value=it })
+            Text(text = "Force routine?")
         }
     }
 
@@ -501,7 +533,7 @@ fun RestScreen(vm: viewModel) {
         })
 
         Log.d("routine", "All routine view recomposed")
-        Column() {
+        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
             for (r in routines.value) {
                 RoutineView(r, vm)
             }

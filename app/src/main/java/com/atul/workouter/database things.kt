@@ -6,6 +6,7 @@ import androidx.room.Database
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Ignore
 import androidx.room.Insert
 import androidx.room.PrimaryKey
 import androidx.room.Query
@@ -71,7 +72,8 @@ data class Exercise(
     @PrimaryKey
     var name: String="", var description: String="", var isTimed: Boolean=false, var time: Int=0, var reps: Int=0, var sets: Int=0, var rest: Float=30f, var steps: List<String> = listOf(""),
     var frequency: Int=0,
-    var routineName: String=""
+    var routineName: String="",
+    @Ignore var setsDone: Int=0,
     )
 
 data class ExerciseWithRoutine(
@@ -127,7 +129,7 @@ interface  RoutineDao {
 }
 
 
-@Database(entities = [Routine::class, Exercise::class], version = 3)
+@Database(entities = [Routine::class, Exercise::class], version = 4)
 @TypeConverters(ExerciseListConverter::class)
 abstract class AppDatabase: RoomDatabase() {
     abstract fun routineDao(): RoutineDao
