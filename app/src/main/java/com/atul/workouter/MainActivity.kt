@@ -203,7 +203,7 @@ fun RestScreen(vm: viewModel) {
                     useCenter = true,
                 )
             }
-            Text(modifier = Modifier.align(Alignment.Center),text="${curr.value.toInt()}")
+            Text(modifier = Modifier.align(Alignment.Center),text="${time!!-curr.value.toInt()}")
         }
 
     }
