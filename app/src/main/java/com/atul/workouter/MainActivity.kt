@@ -1,9 +1,11 @@
 package com.atul.workouter
 
 
+import android.graphics.Paint.Align
 import android.health.connect.datatypes.units.Percentage
 import android.os.Bundle
 import android.util.Log
+import androidx.compose.ui.unit.sp
 import android.view.autofill.AutofillManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
@@ -14,6 +16,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -49,7 +52,9 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawStyle
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.layout.AlignmentLine
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.TextStyle
 import java.util.Date
 
 class MainActivity : AppCompatActivity() {
@@ -304,16 +309,19 @@ fun RestScreen(vm: viewModel) {
     @Composable
     fun WorkoutApp(vm: viewModel) {
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center
         ) {
-            ClickableText(
-                buildAnnotatedString { append("Create routine") },
+            ClickableText(modifier = Modifier.padding(20.dp),
+                text=buildAnnotatedString { append("Create routine") },
+                style = TextStyle(fontSize = 30.sp),
                 onClick = { vm.changeNavigationString("create routine") })
-            ClickableText(
-                buildAnnotatedString { append("View routines") },
+            ClickableText(modifier = Modifier.padding(20.dp),
+                text=buildAnnotatedString { append("View routines") },
+                style = TextStyle(fontSize = 30.sp),
                 onClick = { vm.changeNavigationString("see all routines") })
-            ClickableText(
-                buildAnnotatedString { append("Delete all routines") },
+            ClickableText(modifier = Modifier.padding(20.dp),
+                text=buildAnnotatedString { append("Delete all routines") },
+                style = TextStyle(fontSize = 30.sp),
                 onClick = { vm.changeNavigationString("delete all routines") })
         }
     }
