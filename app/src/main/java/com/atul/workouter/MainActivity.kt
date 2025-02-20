@@ -7,6 +7,7 @@ import android.util.Log
 import android.view.autofill.AutofillManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
@@ -108,9 +109,38 @@ fun Navigator(vm: viewModel) {
     }
 }
 
+fun RestCoroutineWorker(vm:viewModel,exercise: Exercise): Unit {
+
+    vm.isOnRest.value=true
+    exercise.setsDone+=1
+    while(vm.currentExerciseTimerStatus.value!=viewModel.TimerStatus.STOPPED){
+        Thread.sleep(500)
+        //Log.d("RestCoroutineWorker","Waiting for timer to stop")
+    }
+    if(exercise.setsDone>=exercise.sets){
+        vm.currentExerciseIndex.value+=1
+        Log.d("RestCoroutineWorker","This is the current exercise index: ${vm.currentExerciseIndex.value}, ${vm.getExercisesThatCanBeDoneToday().size}, ${vm.isOnRest.value}")
+        if(vm.getExercisesThatCanBeDoneToday().size<=vm.currentExerciseIndex.value){
+            vm.setRoutineLastDoneDateAndLastDoneFrequency(vm.getCurrentRoutine(),exercise)
+            vm.currentExerciseIndex.value=0
+            vm.changeNavigationString("home")
+            return
+        }
+        vm.changeNavigationString("start exercises")
+    }
+    else{
+        vm.changeNavigationString("start exercises")
+    }
+
+}
+
 
 @Composable
 fun RestScreen(vm: viewModel) {
+    if(vm.currentExerciseIndex.value>=vm.getExercisesThatCanBeDoneToday().size){
+        vm.changeNavigationString("home")
+        return
+    }
     val exercise=vm.getExercisesThatCanBeDoneToday()[vm.currentExerciseIndex.value]
     val rest=exercise.rest
     ExerciseTimer(vm = vm, time = rest.toInt())
@@ -121,30 +151,9 @@ fun RestScreen(vm: viewModel) {
     }
     LaunchedEffect(key1 = Unit, block = {
         launch(Dispatchers.IO) coroutine@{
-            //Log.d("RestScreen", "This is the current exercise index: ${vm.currentExerciseIndex.value}, ${vm.getExercisesThatCanBeDoneToday().size}, ${vm.isOnRest.value}")
-            if(vm.isOnRest.value){
-                vm.isOnRest.value=false
-                vm.currentExerciseIndex.value += 1
-                vm.changeNavigationString("start exercises")
-                return@coroutine
-            }
-            vm.isOnRest.value=true
-            if (vm.getExercisesThatCanBeDoneToday().size-1 == vm.currentExerciseIndex.value) {
-                while (vm.currentExerciseTimerStatus.value != viewModel.TimerStatus.STOPPED) {
-                    //Log.d("RestScreen","Waiting for timer to stop")
-                    Thread.sleep(500)
-                }
-                vm.changeNavigationString("home")
-                vm.setRoutineLastDoneDateAndLastDoneFrequency(vm.getCurrentRoutine(), exercise)
-                vm.currentExerciseIndex.value=0
-                return@coroutine
-            }
-            while (vm.currentExerciseTimerStatus.value != viewModel.TimerStatus.STOPPED) {
-               //Log.d("RestScreen","Waiting for timer to stop")
-                Thread.sleep(500)
-            }
-            vm.currentExerciseIndex.value += 1
-            vm.changeNavigationString("start exercises")
+
+            RestCoroutineWorker(vm,exercise)
+            return@coroutine//Log.d("RestScreen", "This is the current exercise index: ${vm.currentExerciseIndex.value}, ${vm.getExercisesThatCanBeDoneToday().size}, ${vm.isOnRest.value}")
         }
     })
 }
@@ -157,8 +166,14 @@ fun RestScreen(vm: viewModel) {
         var curr = remember {
             mutableStateOf(0f)
         };
+        var animTargetState= remember {
+            mutableStateOf(0f)
+        }
+        LaunchedEffect(key1 = Unit, block ={
+            animTargetState.value=100f
+        } )
 
-        var animatedCurr= animateFloatAsState(targetValue = curr.value, animationSpec = tween(1500))
+        var animatedCurr= animateFloatAsState(targetValue = animTargetState.value, animationSpec = tween(time!!*1000, easing = LinearEasing))
 
         LaunchedEffect(key1 = Unit, block = {
             launch(Dispatchers.IO) {
@@ -166,6 +181,7 @@ fun RestScreen(vm: viewModel) {
                 while (curr.value < time!!) {
                     curr.value += 1
                     Thread.sleep(1000)
+                    Log.d("ExerciseTimer","This is the time of timer: ${curr.value}")
                 }
                 vm.currentExerciseTimerStatus.value = viewModel.TimerStatus.STOPPED
                 vm.changeNavigationString("get rest")
@@ -183,11 +199,11 @@ fun RestScreen(vm: viewModel) {
                     size = Size(arcSize.toFloat(), arcSize.toFloat()),
                     topLeft = Offset((size.width-arcSize)/2, (size.height-arcSize)/2),
                     startAngle = 90f,
-                    sweepAngle = 360f * (1-(animatedCurr.value / time!!)),
+                    sweepAngle = 360f * (1-(animatedCurr.value / 100f)),
                     useCenter = true,
                 )
             }
-            Text(modifier = Modifier.align(Alignment.Center),text="${time!!-curr.value}")
+            Text(modifier = Modifier.align(Alignment.Center),text="${curr.value.toInt()}")
         }
 
     }
@@ -198,22 +214,13 @@ fun RestScreen(vm: viewModel) {
         if (exercise.isTimed) {
             ExerciseTimer(vm,exercise.time)
             vm.isOnRest.value=false
-            Box(modifier = Modifier
-                .fillMaxWidth()
-            ) {
-                Text(
-                    modifier = Modifier.align(Alignment.Center),
-                    text = "Exercise name: ${exercise.name}"
-                )
-            }
         } else {
             Column() {
                 Text("Exercise Steps:")
                 for (step in exercise.steps) {
                     Text(step)
                 }
-                Text("Total exercise Sets: ${exercise.sets}")
-                Text("Exercise Rest: ${exercise.rest}")
+                Text("Rest after each set: ${exercise.rest} seconds")
                 Text("Exercise Reps: ${exercise.reps}")
                 vm.isOnRest.value=false
                 Button(onClick = {
@@ -240,8 +247,11 @@ fun RestScreen(vm: viewModel) {
         Column() {
             Text("Exercise name: ${currentExercise.name}")
             Text("Exercise Description: ${currentExercise.description}")
-            Text("Exercise Steps: ${currentExercise.steps}")
-            Text("Exercise Sets: ${currentExercise.sets}")
+            Text("Exercise steps:")
+            for(ex in currentExercise.steps){
+                Text(ex)
+            }
+            Text("Sets done: ${currentExercise.setsDone}/${currentExercise.sets}")
             Text("Exercise Rest: ${currentExercise.rest}")
             if (currentExercise.isTimed) {
                 Text("Exercise Time: ${currentExercise.time}")

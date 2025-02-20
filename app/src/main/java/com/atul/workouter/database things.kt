@@ -129,7 +129,7 @@ interface  RoutineDao {
 }
 
 
-@Database(entities = [Routine::class, Exercise::class], version = 4)
+@Database(entities = [Routine::class, Exercise::class], version = 6)
 @TypeConverters(ExerciseListConverter::class)
 abstract class AppDatabase: RoomDatabase() {
     abstract fun routineDao(): RoutineDao
