@@ -59,10 +59,11 @@ class ExerciseListConverter {
 @Entity
 data class Routine(
     @PrimaryKey
-    val name: String="",
-    val description: String="",
+    var name: String="",
+    var description: String="",
     var lastDoneDate: Date?=null,
     var lastDoneFrequency: Int=0,
+    @Ignore var forceRun: Boolean=false
 )
 
 
@@ -70,7 +71,14 @@ data class Routine(
 @Entity(foreignKeys = [ForeignKey(entity = Routine::class, parentColumns = ["name"], childColumns = ["routineName"], onDelete = ForeignKey.CASCADE)])
 data class Exercise(
     @PrimaryKey
-    var name: String="", var description: String="", var isTimed: Boolean=false, var time: Int=0, var reps: Int=0, var sets: Int=0, var rest: Float=30f, var steps: List<String> = listOf(""),
+    var name: String="",
+    var description: String="",
+    var isTimed: Boolean=false,
+    var time: Int=0,
+    var reps: Int=0,
+    var sets: Int=0,
+    var rest: Float=30f,
+    var steps: List<String> = listOf(""),
     var frequency: Int=0,
     var routineName: String="",
     @Ignore var setsDone: Int=0,
@@ -129,7 +137,7 @@ interface  RoutineDao {
 }
 
 
-@Database(entities = [Routine::class, Exercise::class], version = 6)
+@Database(entities = [Routine::class, Exercise::class], version = 7)
 @TypeConverters(ExerciseListConverter::class)
 abstract class AppDatabase: RoomDatabase() {
     abstract fun routineDao(): RoutineDao

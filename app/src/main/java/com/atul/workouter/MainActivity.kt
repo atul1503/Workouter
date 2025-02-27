@@ -35,9 +35,12 @@ import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -114,26 +117,34 @@ fun Navigator(vm: viewModel) {
     }
 }
 
-fun RestCoroutineWorker(vm:viewModel,exercise: Exercise): Unit {
+fun RestCoroutineWorker(vm:viewModel,exercise: State<Exercise>): Unit {
 
-    vm.isOnRest.value=true
-    exercise.setsDone+=1
-    while(vm.currentExerciseTimerStatus.value!=viewModel.TimerStatus.STOPPED){
-        Thread.sleep(500)
-        //Log.d("RestCoroutineWorker","Waiting for timer to stop")
+    Log.d("RestCoroutineWorker","Just before check : ${vm.currentExerciseTimerStatus.value}")
+    if(vm.currentExerciseTimerStatus.value!=viewModel.TimerStatus.STOPPED){
+        return
     }
-    if(exercise.setsDone>=exercise.sets){
-        vm.currentExerciseIndex.value+=1
+    //Log.d("RestCoroutineWorker","Exercise timer status when it stopped. ${vm.currentExerciseTimerStatus.value}")
+    vm.incrementSetDoneForExercise(exercise.value)
+    Log.d("RestCoroutineWorker","This is the current exercise index: ${vm.currentExerciseIndex.value}, ${vm.getExercisesThatCanBeDoneToday().size}, ${vm.isOnRest.value})")
+    if(exercise.value.setsDone>=exercise.value.sets){
+        vm.setSetsDoneForExercise(exercise.value,0)
+        vm.incrementExerciseIndex()
         Log.d("RestCoroutineWorker","This is the current exercise index: ${vm.currentExerciseIndex.value}, ${vm.getExercisesThatCanBeDoneToday().size}, ${vm.isOnRest.value}")
         if(vm.getExercisesThatCanBeDoneToday().size<=vm.currentExerciseIndex.value){
-            vm.setRoutineLastDoneDateAndLastDoneFrequency(vm.getCurrentRoutine(),exercise)
+            vm.setRoutineLastDoneDateAndLastDoneFrequency(vm.getCurrentRoutine(),exercise.value)
             vm.currentExerciseIndex.value=0
+            Log.d("RestCoroutineWorker","Sending back to home because all exercises are done")
             vm.changeNavigationString("home")
+            vm.isOnRest.value=false
             return
         }
+        Log.d("RestCoroutineWorker"," ${exercise}")
+        Log.d("RestCoroutineWorker","Sending to start exercises because all sets are done")
         vm.changeNavigationString("start exercises")
+
     }
     else{
+        Log.d("RestCoroutineWorker","Sending to start exercises because all sets are not done")
         vm.changeNavigationString("start exercises")
     }
 
@@ -146,15 +157,21 @@ fun RestScreen(vm: viewModel) {
         vm.changeNavigationString("home")
         return
     }
-    val exercise=vm.getExercisesThatCanBeDoneToday()[vm.currentExerciseIndex.value]
-    val rest=exercise.rest
+    val exercise= rememberUpdatedState(newValue =vm.getExercisesThatCanBeDoneToday()[vm.currentExerciseIndex.value])
+    val rest=exercise.value.rest
     ExerciseTimer(vm = vm, time = rest.toInt())
     Box(modifier = Modifier.fillMaxWidth()) {
         Text(modifier = Modifier
             .align(Alignment.Center)
             .offset(0.dp, 200.dp), text = "Relax! Take some rest")
     }
+
     LaunchedEffect(key1 = Unit, block = {
+        vm.isOnRest.value=true
+    })
+
+
+    LaunchedEffect(key1 = vm.currentExerciseTimerStatus.value, block = {
         launch(Dispatchers.IO) coroutine@{
 
             RestCoroutineWorker(vm,exercise)
@@ -174,14 +191,13 @@ fun RestScreen(vm: viewModel) {
         var animTargetState= remember {
             mutableStateOf(0f)
         }
-        LaunchedEffect(key1 = Unit, block ={
-            animTargetState.value=100f
-        } )
+
 
         var animatedCurr= animateFloatAsState(targetValue = animTargetState.value, animationSpec = tween(time!!*1000, easing = LinearEasing))
 
         LaunchedEffect(key1 = Unit, block = {
             launch(Dispatchers.IO) {
+                animTargetState.value=100f
                 vm.currentExerciseTimerStatus.value = viewModel.TimerStatus.STARTED
                 while (curr.value < time!!) {
                     curr.value += 1
@@ -189,7 +205,10 @@ fun RestScreen(vm: viewModel) {
                     Log.d("ExerciseTimer","This is the time of timer: ${curr.value}")
                 }
                 vm.currentExerciseTimerStatus.value = viewModel.TimerStatus.STOPPED
-                vm.changeNavigationString("get rest")
+                if(!vm.isOnRest.value){
+                    Log.d("ExerciseTimer","Sending to rest screen")
+                    vm.changeNavigationString("get rest")
+                }
             }
         })
 
@@ -242,8 +261,9 @@ fun RestScreen(vm: viewModel) {
     fun StartExercisesFromRoutine(vm: viewModel) {
         if(vm.currentExerciseIndex.value >= vm.getExercisesThatCanBeDoneToday().size){
             //Log.d("RestScreen","Sending back to home")
-            vm.changeNavigationString("home")
             vm.currentExerciseIndex.value=0
+            vm.currentExerciseTimerStatus.value=viewModel.TimerStatus.NOT_STARTED
+            vm.changeNavigationString("home")
             return
         }
         val exercises = vm.getExercisesThatCanBeDoneToday()
@@ -276,7 +296,7 @@ fun RestScreen(vm: viewModel) {
     fun RoutineStarter(vm: viewModel) {
         val currentRoutine = vm.getCurrentRoutine()
 
-        LaunchedEffect(key1 = currentRoutine.name, block = {
+        LaunchedEffect(currentRoutine.name, block = {
             // check what exercises can be done today
             // check if all higher priority exercises have been done or not
             launch(Dispatchers.IO) checker@{
@@ -286,7 +306,7 @@ fun RestScreen(vm: viewModel) {
                 val routineLastFreq = currentRoutine.lastDoneFrequency
                 exercises = exercises.sortedBy { it.frequency }
                 Log.d("RoutineStarter", "This is the routine exercises: ${exercises}")
-                if (routineLastDay == null || vm.allowForceRoutine.value) {
+                if (routineLastDay == null || currentRoutine.forceRun ) {
                     //filter out exercises which have frequency more than the lowest freuqnecy exercise
                     val lowestFrequency = exercises[0].frequency
                     exercisesThatCanBeDoneToday.addAll(exercises.filter { it.frequency == lowestFrequency })
@@ -504,9 +524,10 @@ fun RestScreen(vm: viewModel) {
 
     @Composable
     fun RoutineView(routine: Routine, vm: viewModel) {
-
-        var isForceRoutine=vm.allowForceRoutine
         var exercises = remember { mutableStateListOf<Exercise>() }
+        val forceRun= remember {
+            mutableStateOf(false)
+        }
         LaunchedEffect(key1 = routine.name, block = {
             launch(Dispatchers.IO) {
                 vm.changeCurrentRoutine(routine)
@@ -529,7 +550,7 @@ fun RestScreen(vm: viewModel) {
             }) {
                 Text("Start routine")
             }
-            Checkbox(checked = isForceRoutine.value, onCheckedChange = { isForceRoutine.value = it;vm.allowForceRoutine.value=it })
+            Checkbox(checked = forceRun.value, onCheckedChange = { forceRun.value=it; routine.forceRun = it })
             Text(text = "Force routine?")
         }
     }
@@ -553,7 +574,9 @@ fun RestScreen(vm: viewModel) {
         Log.d("routine", "All routine view recomposed")
         Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
             for (r in routines.value) {
-                RoutineView(r, vm)
+                key(r.name) {
+                    RoutineView(r, vm)
+                }
             }
         }
     }

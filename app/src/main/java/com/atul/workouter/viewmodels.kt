@@ -16,7 +16,6 @@ class viewModel: ViewModel() {
     var currentExerciseTimerStatus=mutableStateOf(TimerStatus.NOT_STARTED)
     var exercisesGettingCreatedNow=mutableStateOf(listOf<Exercise>(Exercise()))
     var isOnRest=mutableStateOf(false)
-    var allowForceRoutine=mutableStateOf(false)
 
     enum class TimerStatus{
         STARTED,
@@ -36,6 +35,35 @@ class viewModel: ViewModel() {
     fun setAppDatabase(database: AppDatabase){
         db=database
     }
+
+    fun incrementSetDoneForExercise(exercise: Exercise){
+        var copy=exercise.copy(setsDone = exercise.setsDone+1)
+        copy.steps=exercise.steps.toList()
+        exercisesThatCanBeDoneToday.value= exercisesThatCanBeDoneToday.value.map {
+            if(it.name==exercise.name){
+                copy
+            }else{
+                it
+            }
+        }
+    }
+
+    fun setSetsDoneForExercise(exercise: Exercise, setsDone: Int){
+        var copy=exercise.copy(setsDone = setsDone)
+        copy.steps=exercise.steps.toList()
+        exercisesThatCanBeDoneToday.value= exercisesThatCanBeDoneToday.value.map {
+            if(it.name==exercise.name){
+                copy
+            }else{
+                it
+            }
+        }
+    }
+
+    fun incrementExerciseIndex(){
+        currentExerciseIndex.value+=1
+    }
+
 
     fun getNavigationString(): String{
         return navigationString.value
