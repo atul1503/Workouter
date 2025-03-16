@@ -53,6 +53,10 @@ class viewModel: ViewModel() {
         }
     }
 
+    fun getThisExerciseFromETCBDT(name: String): Exercise{
+        return exercisesThatCanBeDoneToday.value.filter { it.name==name }[0]
+    }
+
     fun editExerciseByName(name: String,ex: Exercise){
 
        CoroutineScope(Dispatchers.IO).launch{

@@ -121,14 +121,7 @@ fun Navigator(vm: viewModel) {
 }
 
 
-@Composable
-fun EditExercise(vm: viewModel,name: String){
 
-
-
-
-
-}
 
 @Composable
 fun EditRoutine(vm: viewModel){
@@ -222,7 +215,7 @@ fun RestCoroutineWorker(vm:viewModel,exercise: State<Exercise>): Unit {
     //Log.d("RestCoroutineWorker","Exercise timer status when it stopped. ${vm.currentExerciseTimerStatus.value}")
     vm.incrementSetDoneForExercise(exercise.value)
     Log.d("RestCoroutineWorker","This is the current exercise index: ${vm.currentExerciseIndex.value}, ${vm.getExercisesThatCanBeDoneToday().size}, ${vm.isOnRest.value})")
-    if(exercise.value.setsDone>=exercise.value.sets){
+    if(vm.getThisExerciseFromETCBDT(exercise.value.name).setsDone>=exercise.value.sets){
         vm.setSetsDoneForExercise(exercise.value,0)
         vm.incrementExerciseIndex()
         Log.d("RestCoroutineWorker","This is the current exercise index: ${vm.currentExerciseIndex.value}, ${vm.getExercisesThatCanBeDoneToday().size}, ${vm.isOnRest.value}")
@@ -230,8 +223,8 @@ fun RestCoroutineWorker(vm:viewModel,exercise: State<Exercise>): Unit {
             vm.setRoutineLastDoneDateAndLastDoneFrequency(vm.getCurrentRoutine(),exercise.value)
             vm.currentExerciseIndex.value=0
             Log.d("RestCoroutineWorker","Sending back to home because all exercises are done")
-            vm.changeNavigationString("home")
             vm.isOnRest.value=false
+            vm.changeNavigationString("home")
             return
         }
         Log.d("RestCoroutineWorker"," ${exercise}")
@@ -295,6 +288,8 @@ fun RestScreen(vm: viewModel) {
             launch(Dispatchers.IO) {
                 animTargetState.value=100f
                 vm.currentExerciseTimerStatus.value = viewModel.TimerStatus.STARTED
+                //write log statements to know when this is happening
+                Log.d("ExerciseTimer","The timer has started. This is the current exercise index: ${vm.currentExerciseIndex.value},Whether app is on rest stage: ${vm.isOnRest.value}")
                 while (curr.value < time!!) {
                     curr.value += 1
                     Thread.sleep(1000)
