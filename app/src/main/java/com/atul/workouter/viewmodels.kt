@@ -3,6 +3,9 @@ package com.atul.workouter
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.Date
 
 class viewModel: ViewModel() {
@@ -16,6 +19,8 @@ class viewModel: ViewModel() {
     var currentExerciseTimerStatus=mutableStateOf(TimerStatus.NOT_STARTED)
     var exercisesGettingCreatedNow=mutableStateOf(listOf<Exercise>(Exercise()))
     var isOnRest=mutableStateOf(false)
+    var EditRoutine= mutableStateOf(Routine())
+    var EditExercises= mutableStateListOf<Exercise>()
 
     enum class TimerStatus{
         STARTED,
@@ -48,6 +53,22 @@ class viewModel: ViewModel() {
         }
     }
 
+    fun editExerciseByName(name: String,ex: Exercise){
+
+       CoroutineScope(Dispatchers.IO).launch{
+           db!!.exerciseDao().deleteThisExercise(name)
+           db!!.exerciseDao().insertExercise(ex)
+       }
+    }
+
+    fun getExercisesOfRoutine(routine: Routine): List<Exercise>{
+        return db!!.routineDao().getRoutineWithExercises(routine.name)[0].exercise
+    }
+
+    fun getExerciseByName(name: String): Exercise{
+        return db!!.exerciseDao().getExercise(name)
+    }
+
     fun setSetsDoneForExercise(exercise: Exercise, setsDone: Int){
         var copy=exercise.copy(setsDone = setsDone)
         copy.steps=exercise.steps.toList()
@@ -58,6 +79,11 @@ class viewModel: ViewModel() {
                 it
             }
         }
+    }
+
+
+    fun getEditRoutineExercises(): List<Exercise>{
+        return db!!.routineDao().getRoutineWithExercises(EditRoutine.value.name)[0].exercise
     }
 
     fun incrementExerciseIndex(){

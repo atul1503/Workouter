@@ -82,7 +82,16 @@ data class Exercise(
     var frequency: Int=0,
     var routineName: String="",
     @Ignore var setsDone: Int=0,
-    )
+    ): Cloneable {
+    public override fun clone(): Exercise {
+        val ex=copy(name=name, description=description, isTimed=isTimed, time=time, reps=reps, sets=sets, rest=rest, steps=steps, frequency=frequency, routineName=routineName)
+        ex.steps=steps.toList()
+        return ex
+    }
+}
+
+
+
 
 data class ExerciseWithRoutine(
     @Relation(
@@ -105,6 +114,9 @@ interface ExerciseDao {
         @Query("SELECT * FROM Exercise")
         abstract fun getAllExercises(): List<Exercise>
 
+        @Query("DELETE FROM Exercise WHERE name= :name")
+        abstract fun deleteThisExercise(name: String)
+
         //delete all
         @Query("DELETE FROM Exercise")
         abstract fun deleteAll()
@@ -125,6 +137,8 @@ interface  RoutineDao {
     //delete all
     @Query("DELETE FROM Routine")
     abstract fun deleteAll()
+
+
 
     @Transaction
     @Query("SELECT * FROM Routine WHERE name= :name")

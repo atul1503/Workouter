@@ -101,6 +101,9 @@ fun Navigator(vm: viewModel) {
         "start current exercise" -> {
             StartCurrentExercise(vm = vm)
         }
+        "edit routine" -> {
+            EditRoutine(vm = vm)
+        }
         "get rest" -> {
             RestScreen(vm)
         }
@@ -113,6 +116,99 @@ fun Navigator(vm: viewModel) {
                     vm.changeNavigationString("home")
                 }
             })
+        }
+    }
+}
+
+
+@Composable
+fun EditExercise(vm: viewModel,name: String){
+
+
+
+
+
+}
+
+@Composable
+fun EditRoutine(vm: viewModel){
+    val routine= vm.EditRoutine.value
+
+
+    val name= routine.name
+    var description= remember {
+        mutableStateOf(routine.description)
+    }
+    var forceRun= remember {
+        mutableStateOf(routine.forceRun)
+    }
+    var exercises=vm.EditExercises
+    val db= vm.getAppDatabase()
+    val scope= CoroutineScope(Dispatchers.IO)
+
+    LaunchedEffect(key1 = Unit, block = {
+        scope.launch {
+            vm.EditExercises.addAll(vm.getExercisesOfRoutine(routine))
+        }
+    })
+
+    fun replaceExerciseInVM(ex: Exercise){
+        var len=vm.EditExercises.size;
+        vm.EditExercises.addAll(vm.EditExercises.map {
+            if(it.name==ex.name){
+                ex
+            }else{
+                it
+            }
+        })
+        Log.d("EditRoutine","This is the length of exercises: ${vm.EditExercises.size}")
+        vm.EditExercises.removeRange(0,len)
+        Log.d("EditRoutine","This is the length of exercises: ${vm.EditExercises.size}")
+    }
+
+    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+        TextField(value = description.value, onValueChange = { description.value=it; routine.description=it }, label = { Text("Enter routine description") })
+        Text("Exercises")
+        for(ex in exercises){
+            Column {
+                TextField(value = ex!!.name, onValueChange = { ex!!.name=it;replaceExerciseInVM(ex) }, label = { Text("Enter exercise name") })
+                TextField(value = ex!!.description, onValueChange = { ex!!.description=it ;replaceExerciseInVM(ex) }, label = { Text("Enter exercise description") })
+                TextField(value = ex!!.steps.joinToString("\n"), onValueChange = { ex!!.steps=it.split("\n") ;replaceExerciseInVM(ex) }, label = { Text("Enter exercise steps") })
+                TextField(value = ex!!.sets.toString(), onValueChange = { ex!!.sets=it.toInt() ;replaceExerciseInVM(ex) }, label = { Text("Enter number of sets") })
+                TextField(value = ex!!.rest.toString(), onValueChange = { ex!!.rest=it.toFloat() ;replaceExerciseInVM(ex) }, label = { Text("Enter rest between sets") })
+                TextField(value = ex!!.frequency.toString(), onValueChange = { ex!!.frequency=it.toInt() ;replaceExerciseInVM(ex) }, label = { Text("Enter exercise frequency in days") })
+                Row {
+                    Text("Is exercise timed?")
+                    Checkbox(checked = ex!!.isTimed, onCheckedChange = { ex!!.isTimed=it ;replaceExerciseInVM(ex) })
+                }
+
+                if (ex!!.isTimed) {
+                    TextField(value = ex!!.time.toString(), onValueChange = {
+                        if(it==""){
+                            return@TextField
+                        }
+                        ex!!.time=it.toInt() ;replaceExerciseInVM(ex)
+                                                                            }, label = { Text("Enter time for exercise") })
+                } else {
+                    TextField(value = ex!!.reps.toString(), onValueChange = {
+                        if(it==""){
+                            return@TextField
+                        }
+
+                        ex!!.reps=it.toInt() ;replaceExerciseInVM(ex) }, label = { Text("Enter number of reps") })
+                }
+            }
+        }
+        Button(onClick = {
+            scope.launch {
+                for(ex in exercises){
+                    db.exerciseDao().deleteThisExercise(ex!!.name)
+                    db.exerciseDao().insertExercise(ex!!)
+                }
+                vm.changeNavigationString("home")
+            }
+        }) {
+            Text("Save routine")
         }
     }
 }
@@ -549,6 +645,12 @@ fun RestScreen(vm: viewModel) {
                 Log.d("exercise","${vm.getCurrentRoutine()}, ${vm.getNavigationString()}")
             }) {
                 Text("Start routine")
+            }
+            Button(onClick = {
+                vm.EditRoutine.value=routine
+                vm.changeNavigationString("edit routine")
+            }) {
+                Text("Edit routine")
             }
             Checkbox(checked = forceRun.value, onCheckedChange = { forceRun.value=it; routine.forceRun = it })
             Text(text = "Force routine?")
