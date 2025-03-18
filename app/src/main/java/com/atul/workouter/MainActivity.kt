@@ -4,6 +4,7 @@ package com.atul.workouter
 import android.graphics.Paint.Align
 import android.health.connect.datatypes.units.Percentage
 import android.os.Bundle
+import android.speech.tts.TextToSpeech
 import android.util.Log
 import androidx.compose.ui.unit.sp
 import android.view.autofill.AutofillManager
@@ -57,6 +58,7 @@ import androidx.compose.ui.graphics.drawscope.DrawStyle
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.layout.AlignmentLine
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import java.util.Date
 
@@ -70,6 +72,12 @@ class MainActivity : AppCompatActivity() {
         val viewmodel= viewModel()
         val db= DatabaseProvider.getDatabase(this)
         viewmodel.setAppDatabase(db)
+
+        if(viewmodel.ctx==null){
+            viewmodel.setContext(this)
+        }
+
+        viewmodel.getTextToSpeech()
 
         /*
         CoroutineScope(Dispatchers.IO).launch {
@@ -119,6 +127,7 @@ fun Navigator(vm: viewModel) {
         }
     }
 }
+
 
 
 
@@ -248,6 +257,9 @@ fun RestScreen(vm: viewModel) {
     }
     val exercise= rememberUpdatedState(newValue =vm.getExercisesThatCanBeDoneToday()[vm.currentExerciseIndex.value])
     val rest=exercise.value.rest
+
+
+
     ExerciseTimer(vm = vm, time = rest.toInt())
     Box(modifier = Modifier.fillMaxWidth()) {
         Text(modifier = Modifier
@@ -258,7 +270,6 @@ fun RestScreen(vm: viewModel) {
     LaunchedEffect(key1 = Unit, block = {
         vm.isOnRest.value=true
     })
-
 
     LaunchedEffect(key1 = vm.currentExerciseTimerStatus.value, block = {
         launch(Dispatchers.IO) coroutine@{
@@ -288,11 +299,21 @@ fun RestScreen(vm: viewModel) {
             launch(Dispatchers.IO) {
                 animTargetState.value=100f
                 vm.currentExerciseTimerStatus.value = viewModel.TimerStatus.STARTED
+                var saidSpeech=false
                 //write log statements to know when this is happening
                 Log.d("ExerciseTimer","The timer has started. This is the current exercise index: ${vm.currentExerciseIndex.value},Whether app is on rest stage: ${vm.isOnRest.value}")
                 while (curr.value < time!!) {
                     curr.value += 1
                     Thread.sleep(1000)
+                    if(!vm.getTextToSpeech().isSpeaking && !saidSpeech){
+                        if(vm.isOnRest.value){
+                            vm.getTextToSpeech().speak("take rest",TextToSpeech.QUEUE_FLUSH, null, null)
+                            saidSpeech=true
+                        }else{
+                            vm.getTextToSpeech().speak("start ${vm.getExercisesThatCanBeDoneToday()[vm.currentExerciseIndex.value].name}",TextToSpeech.QUEUE_FLUSH, null, null)
+                            saidSpeech=true
+                        }
+                    }
                     Log.d("ExerciseTimer","This is the time of timer: ${curr.value}")
                 }
                 vm.currentExerciseTimerStatus.value = viewModel.TimerStatus.STOPPED
@@ -327,8 +348,8 @@ fun RestScreen(vm: viewModel) {
     fun StartCurrentExercise(vm: viewModel) {
         val exercise = vm.getExercisesThatCanBeDoneToday()[vm.currentExerciseIndex.value]
         if (exercise.isTimed) {
-            ExerciseTimer(vm,exercise.time)
             vm.isOnRest.value=false
+            ExerciseTimer(vm,exercise.time)
         } else {
             Column() {
                 Text("Exercise Steps:")

@@ -1,5 +1,7 @@
 package com.atul.workouter
 
+import android.content.Context
+import android.speech.tts.TextToSpeech
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -21,11 +23,32 @@ class viewModel: ViewModel() {
     var isOnRest=mutableStateOf(false)
     var EditRoutine= mutableStateOf(Routine())
     var EditExercises= mutableStateListOf<Exercise>()
+    var tts : TextToSpeech?=null
+    var ctx: Context?=null
 
     enum class TimerStatus{
         STARTED,
         STOPPED,
         NOT_STARTED,
+    }
+
+
+    fun getTextToSpeech(): TextToSpeech {
+        if(tts==null){
+            tts=TextToSpeech(ctx, TextToSpeech.OnInitListener { status ->
+                if (status != TextToSpeech.ERROR) {
+                    tts!!.language = ctx!!.resources.configuration.locales[0]
+                }
+            })
+            return tts!!
+        }
+        else{
+            return tts!!
+        }
+    }
+
+    fun setContext(ctx: Context){
+        this.ctx=ctx
     }
 
 
