@@ -356,6 +356,11 @@ fun RestScreen(vm: viewModel) {
                 for (step in exercise.steps) {
                     Text(step)
                 }
+
+                if(!vm.getTextToSpeech().isSpeaking){
+                    vm.getTextToSpeech().speak("start ${vm.getExercisesThatCanBeDoneToday()[vm.currentExerciseIndex.value].name}",TextToSpeech.QUEUE_FLUSH, null, null)
+                }
+
                 Text("Rest after each set: ${exercise.rest} seconds")
                 Text("Exercise Reps: ${exercise.reps}")
                 vm.isOnRest.value=false
