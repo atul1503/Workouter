@@ -253,8 +253,7 @@ fun RestScreen(vm: viewModel) {
     }
     val exercise= rememberUpdatedState(newValue =vm.getExercisesThatCanBeDoneToday()[vm.currentExerciseIndex.value])
     val rest=exercise.value.rest
-
-
+    vm.isOnRest.value=true
 
     ExerciseTimer(vm = vm, time = rest.toInt(), {
         RestCoroutineWorker(vm,exercise)
