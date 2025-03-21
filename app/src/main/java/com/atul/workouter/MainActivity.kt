@@ -17,6 +17,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,8 +33,14 @@ import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.Checkbox
+import androidx.compose.material.Colors
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Shapes
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
+import androidx.compose.material.Typography
+import androidx.compose.material.darkColors
+import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
@@ -59,6 +66,7 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.layout.AlignmentLine
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import java.util.Date
 
@@ -87,7 +95,28 @@ class MainActivity : AppCompatActivity() {
          */
 
         setContent {
-                Navigator(viewmodel)
+
+            val myColor=if(isSystemInDarkTheme()){
+                darkColors(
+                    primary = Color.Blue,
+                    secondary = Color.Red,
+                    background = Color.White
+                )
+            }
+            else{
+                lightColors(
+                    primary = Color.Blue,
+                    secondary = Color.Red,
+                    background = Color.Black
+                )
+            }
+
+            MaterialTheme(
+                colors = myColor,
+                typography = Typography(),
+                shapes = Shapes(),
+                content = { Navigator(viewmodel) }
+            )
         }
     }
 }
@@ -170,17 +199,17 @@ fun EditRoutine(vm: viewModel){
 
     Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
         TextField(value = description.value, onValueChange = { description.value=it; routine.description=it }, label = { Text("Enter routine description") })
-        Text("Exercises")
+        Text("Exercises",color = MaterialTheme.colors.onBackground )
         for(ex in exercises){
             Column {
-                TextField(value = ex!!.name, onValueChange = { ex!!.name=it;replaceExerciseInVM(ex) }, label = { Text("Enter exercise name") })
+                TextField(value = ex!!.name, onValueChange = { ex!!.name=it;replaceExerciseInVM(ex) }, label = { Text("Enter exercise name",color = MaterialTheme.colors.onBackground ) })
                 TextField(value = ex!!.description, onValueChange = { ex!!.description=it ;replaceExerciseInVM(ex) }, label = { Text("Enter exercise description") })
                 TextField(value = ex!!.steps.joinToString("\n"), onValueChange = { ex!!.steps=it.split("\n") ;replaceExerciseInVM(ex) }, label = { Text("Enter exercise steps") })
                 TextField(value = ex!!.sets.toString(), onValueChange = { ex!!.sets=it.toInt() ;replaceExerciseInVM(ex) }, label = { Text("Enter number of sets") })
                 TextField(value = ex!!.rest.toString(), onValueChange = { ex!!.rest=it.toFloat() ;replaceExerciseInVM(ex) }, label = { Text("Enter rest between sets") })
                 TextField(value = ex!!.frequency.toString(), onValueChange = { ex!!.frequency=it.toInt() ;replaceExerciseInVM(ex) }, label = { Text("Enter exercise frequency in days") })
                 Row {
-                    Text("Is exercise timed?")
+                    Text("Is exercise timed?",color = MaterialTheme.colors.onBackground )
                     Checkbox(checked = ex!!.isTimed, onCheckedChange = { ex!!.isTimed=it ;replaceExerciseInVM(ex) })
                 }
 
@@ -190,14 +219,14 @@ fun EditRoutine(vm: viewModel){
                             return@TextField
                         }
                         ex!!.time=it.toInt() ;replaceExerciseInVM(ex)
-                                                                            }, label = { Text("Enter time for exercise") })
+                                                                            }, label = { Text("Enter time for exercise",color = MaterialTheme.colors.onBackground ) })
                 } else {
                     TextField(value = ex!!.reps.toString(), onValueChange = {
                         if(it==""){
                             return@TextField
                         }
 
-                        ex!!.reps=it.toInt() ;replaceExerciseInVM(ex) }, label = { Text("Enter number of reps") })
+                        ex!!.reps=it.toInt() ;replaceExerciseInVM(ex) }, label = { Text("Enter number of reps",color = MaterialTheme.colors.onBackground ) })
                 }
             }
         }
@@ -210,7 +239,7 @@ fun EditRoutine(vm: viewModel){
                 vm.changeNavigationString("home")
             }
         }) {
-            Text("Save routine")
+            Text("Save routine",color = MaterialTheme.colors.onBackground )
         }
     }
 }
@@ -261,7 +290,7 @@ fun RestScreen(vm: viewModel) {
     Box(modifier = Modifier.fillMaxWidth()) {
         Text(modifier = Modifier
             .align(Alignment.Center)
-            .offset(0.dp, 200.dp), text = "Relax! Take some rest")
+            .offset(0.dp, 200.dp), text = "Relax! Take some rest",color = MaterialTheme.colors.onBackground )
     }
 
 }
@@ -320,7 +349,7 @@ fun RestScreen(vm: viewModel) {
                     useCenter = true,
                 )
             }
-            Text(modifier = Modifier.align(Alignment.Center),text="${time!!-curr.value.toInt()}")
+            Text(modifier = Modifier.align(Alignment.Center),color = MaterialTheme.colors.onBackground ,text="${time!!-curr.value.toInt()}")
         }
 
     }
@@ -335,26 +364,27 @@ fun RestScreen(vm: viewModel) {
             })
         } else {
             Column() {
-                Text("Exercise Steps:")
+                Text("Exercise Steps:",color = MaterialTheme.colors.onBackground )
                 for (step in exercise.steps) {
-                    Text(step)
+                    Text(step,color = MaterialTheme.colors.onBackground )
                 }
 
                 if(!vm.getTextToSpeech().isSpeaking){
                     vm.getTextToSpeech().speak("start ${vm.getExercisesThatCanBeDoneToday()[vm.currentExerciseIndex.value].name}",TextToSpeech.QUEUE_FLUSH, null, null)
                 }
 
-                Text("Rest after each set: ${exercise.rest} seconds")
-                Text("Exercise Reps: ${exercise.reps}")
+                Text("Rest after each set: ${exercise.rest} seconds",color = MaterialTheme.colors.onBackground )
+                Text("Exercise Reps: ${exercise.reps}",color = MaterialTheme.colors.onBackground )
                 vm.isOnRest.value=false
                 Button(onClick = {
                     vm.changeNavigationString("get rest")
                 }) {
-                    Text("Get little rest!")
+                    Text("Get little rest!",color = MaterialTheme.colors.onBackground )
                 }
             }
         }
     }
+
 
 
     @Composable
@@ -368,23 +398,23 @@ fun RestScreen(vm: viewModel) {
         val currentExerciseIndex = vm.currentExerciseIndex
         val currentExercise = exercises[currentExerciseIndex.value]
         Column() {
-            Text("Exercise name: ${currentExercise.name}")
-            Text("Exercise Description: ${currentExercise.description}")
-            Text("Exercise steps:")
+            Text("Exercise name: ${currentExercise.name}",color = MaterialTheme.colors.onBackground )
+            Text("Exercise Description: ${currentExercise.description}",color = MaterialTheme.colors.onBackground )
+            Text("Exercise steps:",color = MaterialTheme.colors.onBackground )
             for(ex in currentExercise.steps){
-                Text(ex)
+                Text(ex,color = MaterialTheme.colors.onBackground )
             }
-            Text("Sets done: ${currentExercise.setsDone}/${currentExercise.sets}")
-            Text("Exercise Rest: ${currentExercise.rest}")
+            Text("Sets done: ${currentExercise.setsDone}/${currentExercise.sets}",color = MaterialTheme.colors.onBackground )
+            Text("Exercise Rest: ${currentExercise.rest}",color = MaterialTheme.colors.onBackground )
             if (currentExercise.isTimed) {
-                Text("Exercise Time: ${currentExercise.time}")
+                Text("Exercise Time: ${currentExercise.time}",color = MaterialTheme.colors.onBackground )
             } else {
-                Text("Exercise Reps: ${currentExercise.reps}")
+                Text("Exercise Reps: ${currentExercise.reps}",color = MaterialTheme.colors.onBackground )
             }
             Button(onClick = {
                 vm.changeNavigationString("start current exercise")
             }) {
-                Text("Start exercise")
+                Text("Start exercise",color = MaterialTheme.colors.onBackground )
             }
         }
     }
@@ -430,15 +460,39 @@ fun RestScreen(vm: viewModel) {
             modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center
         ) {
             ClickableText(modifier = Modifier.padding(20.dp),
-                text=buildAnnotatedString { append("Create routine") },
+                text=buildAnnotatedString {
+                    val text="Create routine"
+                    append(text)
+                    addStyle(
+                        style = SpanStyle(color = MaterialTheme.colors.onBackground),
+                        start = 0,
+                        end = text.length
+                    )
+                                          },
                 style = TextStyle(fontSize = 30.sp),
                 onClick = { vm.changeNavigationString("create routine") })
             ClickableText(modifier = Modifier.padding(20.dp),
-                text=buildAnnotatedString { append("View routines") },
+                text=buildAnnotatedString {
+                    val text="View routines"
+                    append(text)
+                    addStyle(
+                        style = SpanStyle(color = MaterialTheme.colors.onBackground),
+                        start = 0,
+                        end = text.length
+                    )
+                                          },
                 style = TextStyle(fontSize = 30.sp),
                 onClick = { vm.changeNavigationString("see all routines") })
             ClickableText(modifier = Modifier.padding(20.dp),
-                text=buildAnnotatedString { append("Delete all routines") },
+                text=buildAnnotatedString {
+                    val text="Delete routines"
+                    append(text)
+                    addStyle(
+                        style = SpanStyle(color = MaterialTheme.colors.onBackground),
+                        start = 0,
+                        end = text.length
+                    )
+                                          },
                 style = TextStyle(fontSize = 30.sp),
                 onClick = { vm.changeNavigationString("delete all routines") })
         }
@@ -447,7 +501,7 @@ fun RestScreen(vm: viewModel) {
     @Composable
     fun ViewRoutines() {
         Column(modifier = Modifier.fillMaxSize()) {
-            Text("Routines")
+            Text("Routines",color = MaterialTheme.colors.onBackground )
 
         }
     }
@@ -461,15 +515,15 @@ fun RestScreen(vm: viewModel) {
         val scope = CoroutineScope(Dispatchers.IO)
         val db = vm.getAppDatabase()
 
-        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+        Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
             TextField(
                 value = "${name.value}",
                 onValueChange = { name.value = it },
-                label = { Text("Enter routine name") })
+                label = { Text("Enter routine name",color = MaterialTheme.colors.onBackground ) })
             TextField(
                 value = "${description.value}",
                 onValueChange = { description.value = it },
-                label = { Text("Enter description") })
+                label = { Text("Enter description",color = MaterialTheme.colors.onBackground ) })
             for (i in 1..exerciseCount.value) {
                 ExerciseInput(vm)
             }
@@ -477,7 +531,7 @@ fun RestScreen(vm: viewModel) {
                 vm.exercisesGettingCreatedNow.value= vm.exercisesGettingCreatedNow.value.plus(Exercise())
 
             }) {
-                Text("Add exercise")
+                Text("Add exercise",color = MaterialTheme.colors.onBackground )
             }
 
             Button(onClick = {
@@ -502,7 +556,7 @@ fun RestScreen(vm: viewModel) {
 
 
             }) {
-                Text("Looks good?")
+                Text("Looks good?",color = MaterialTheme.colors.onBackground )
             }
         }
 
@@ -531,15 +585,15 @@ fun RestScreen(vm: viewModel) {
                 onValueChange = { name.value = it;exercise.name = it
                                 Log.d("ExerciseInput","${exercise.name}, ${vm.exercisesGettingCreatedNow.value[vm.exercisesGettingCreatedNow.value.size - 1].name}")
                                 },
-                label = { Text("Enter exercise name") })
+                label = { Text("Enter exercise name",color = MaterialTheme.colors.onBackground ) })
             TextField(
                 value = "${description.value}",
                 onValueChange = { description.value = it;exercise.description = it },
-                label = { Text("Enter exercise description") })
+                label = { Text("Enter exercise description",color = MaterialTheme.colors.onBackground ) })
             TextField(
                 value = "${steps.value}",
                 onValueChange = { steps.value = it;exercise.steps = it.split("\n") },
-                label = { Text("Enter exercise steps") })
+                label = { Text("Enter exercise steps",color = MaterialTheme.colors.onBackground ) })
             TextField(
                 value = "${sets.value}",
                 onValueChange = {
@@ -549,7 +603,7 @@ fun RestScreen(vm: viewModel) {
                     sets.value = it.toInt();exercise.sets = it.toInt();
 
                 },
-                label = { Text("Enter number of sets") })
+                label = { Text("Enter number of sets",color = MaterialTheme.colors.onBackground ) })
             TextField(
                 value = "${rest.value}",
                 onValueChange = {
@@ -559,7 +613,7 @@ fun RestScreen(vm: viewModel) {
                     rest.value = it.toFloat();exercise.rest = it.toFloat();
 
                 },
-                label = { Text("Enter rest between sets") })
+                label = { Text("Enter rest between sets",color = MaterialTheme.colors.onBackground ) })
             TextField(value = "${frequency.value}", onValueChange = {
                 if (it == "") {
                     return@TextField
@@ -567,10 +621,10 @@ fun RestScreen(vm: viewModel) {
                 frequency.value = it.toInt();exercise.frequency = it.toInt()
 
             }, label = {
-                Text("Enter exercise frequency in days")
+                Text("Enter exercise frequency in days",color = MaterialTheme.colors.onBackground )
             })
             Row {
-                Text("Is exercise timed?")
+                Text("Is exercise timed?",color = MaterialTheme.colors.onBackground )
                 Checkbox(
                     checked = isTimed.value,
                     onCheckedChange = { isTimed.value = it;exercise.isTimed = it
@@ -588,7 +642,7 @@ fun RestScreen(vm: viewModel) {
                         time.value = it.toInt();
                         exercise.time = it.toInt()
                     },
-                    label = { Text("Enter time for exercise") })
+                    label = { Text("Enter time for exercise",color = MaterialTheme.colors.onBackground ) })
             } else {
                 TextField(
                     value = "${reps.value}",
@@ -598,7 +652,7 @@ fun RestScreen(vm: viewModel) {
                         }
                         ;reps.value = it.toInt();exercise.reps = it.toInt()
                     },
-                    label = { Text("Enter number of reps") })
+                    label = { Text("Enter number of reps",color = MaterialTheme.colors.onBackground ) })
             }
         }
     }
@@ -606,15 +660,15 @@ fun RestScreen(vm: viewModel) {
     @Composable
     fun ExerciseViewForRoutineView(exercise: Exercise, vm: viewModel) {
         Column() {
-            Text("Exercise name: ${exercise.name}")
-            Text("Exercise Description: ${exercise.description}")
-            Text("Exercise Steps: ${exercise.steps}")
-            Text("Exercise Sets: ${exercise.sets}")
-            Text("Exercise Rest: ${exercise.rest}")
+            Text("Exercise name: ${exercise.name}",color = MaterialTheme.colors.onBackground )
+            Text("Exercise Description: ${exercise.description}",color = MaterialTheme.colors.onBackground )
+            Text("Exercise Steps: ${exercise.steps}",color = MaterialTheme.colors.onBackground )
+            Text("Exercise Sets: ${exercise.sets}",color = MaterialTheme.colors.onBackground )
+            Text("Exercise Rest: ${exercise.rest}",color = MaterialTheme.colors.onBackground )
             if (exercise.isTimed) {
-                Text("Exercise Time: ${exercise.time}")
+                Text("Exercise Time: ${exercise.time}",color = MaterialTheme.colors.onBackground )
             } else {
-                Text("Exercise Reps: ${exercise.reps}")
+                Text("Exercise Reps: ${exercise.reps}",color = MaterialTheme.colors.onBackground )
             }
 
         }
@@ -635,8 +689,8 @@ fun RestScreen(vm: viewModel) {
         })
 
         Column {
-            Text("Routine name: ${routine.name}")
-            Text("Description: ${routine.description}")
+            Text("Routine name: ${routine.name}",color = MaterialTheme.colors.onBackground )
+            Text("Description: ${routine.description}",color = MaterialTheme.colors.onBackground )
             for (ex in exercises) {
                 ExerciseViewForRoutineView(ex, vm)
             }
@@ -646,16 +700,16 @@ fun RestScreen(vm: viewModel) {
                 vm.changeNavigationString("start routine")
                 Log.d("exercise","${vm.getCurrentRoutine()}, ${vm.getNavigationString()}")
             }) {
-                Text("Start routine")
+                Text("Start routine",color = MaterialTheme.colors.onBackground )
             }
             Button(onClick = {
                 vm.EditRoutine.value=routine
                 vm.changeNavigationString("edit routine")
             }) {
-                Text("Edit routine")
+                Text("Edit routine",color = MaterialTheme.colors.onBackground )
             }
             Checkbox(checked = forceRun.value, onCheckedChange = { forceRun.value=it; routine.forceRun = it })
-            Text(text = "Force routine?")
+            Text(text = "Force routine?",color = MaterialTheme.colors.onBackground )
         }
     }
 
