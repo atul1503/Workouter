@@ -176,6 +176,9 @@ fun EditRoutine(vm: viewModel){
     var exercises=vm.EditExercises
     val db= vm.getAppDatabase()
     val scope= CoroutineScope(Dispatchers.IO)
+    val showHints=remember {
+        mutableStateOf(false)
+    }
 
     LaunchedEffect(key1 = Unit, block = {
         scope.launch {
@@ -198,30 +201,32 @@ fun EditRoutine(vm: viewModel){
     }
 
     Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-        TextField(value = description.value, onValueChange = { description.value=it; routine.description=it }, label = { Text("Enter routine description") })
+        TextField(modifier=Modifier.fillMaxWidth(),value = description.value, onValueChange = { description.value=it; routine.description=it }, label = { Text("Enter routine description") })
         Text("Exercises",color = MaterialTheme.colors.onBackground )
         for(ex in exercises){
             Column {
-                TextField(value = ex!!.name, onValueChange = { ex!!.name=it;replaceExerciseInVM(ex) }, label = { Text("Enter exercise name",color = MaterialTheme.colors.onBackground ) })
-                TextField(value = ex!!.description, onValueChange = { ex!!.description=it ;replaceExerciseInVM(ex) }, label = { Text("Enter exercise description") })
-                TextField(value = ex!!.steps.joinToString("\n"), onValueChange = { ex!!.steps=it.split("\n") ;replaceExerciseInVM(ex) }, label = { Text("Enter exercise steps") })
-                TextField(value = ex!!.sets.toString(), onValueChange = { ex!!.sets=it.toInt() ;replaceExerciseInVM(ex) }, label = { Text("Enter number of sets") })
-                TextField(value = ex!!.rest.toString(), onValueChange = { ex!!.rest=it.toFloat() ;replaceExerciseInVM(ex) }, label = { Text("Enter rest between sets") })
-                TextField(value = ex!!.frequency.toString(), onValueChange = { ex!!.frequency=it.toInt() ;replaceExerciseInVM(ex) }, label = { Text("Enter exercise frequency in days") })
+                TextField(modifier=Modifier.fillMaxWidth(),value = ex!!.name, onValueChange = { ex!!.name=it;replaceExerciseInVM(ex) }, label = { Text("Enter exercise name",color = MaterialTheme.colors.onBackground ) })
+                TextField(modifier=Modifier.fillMaxWidth(),value = ex!!.description, onValueChange = { ex!!.description=it ;replaceExerciseInVM(ex) }, label = { Text("Enter exercise description") })
+                TextField(modifier=Modifier.fillMaxWidth(),value = ex!!.steps.joinToString("\n"), onValueChange = { ex!!.steps=it.split("\n") ;replaceExerciseInVM(ex) }, label = { Text("Enter exercise steps") })
+                TextField(modifier=Modifier.fillMaxWidth(),value = ex!!.sets.toString(), onValueChange = { ex!!.sets=it.toInt() ;replaceExerciseInVM(ex) }, label = { Text("Enter number of sets") })
+                TextField(modifier=Modifier.fillMaxWidth(),value = ex!!.rest.toString(), onValueChange = { ex!!.rest=it.toFloat() ;replaceExerciseInVM(ex) }, label = { Text("Enter rest between sets") })
+                TextField(modifier=Modifier.fillMaxWidth(),value = ex!!.frequency.toString(), onValueChange = { ex!!.frequency=it.toInt() ;replaceExerciseInVM(ex) }, label = {
+                    Text("Enter exercise frequency in days. If you put 2 here then if you do this exercise today you get to do it again only after 2 days from today.",color = MaterialTheme.colors.onBackground )
+                })
                 Row {
                     Text("Is exercise timed?",color = MaterialTheme.colors.onBackground )
-                    Checkbox(checked = ex!!.isTimed, onCheckedChange = { ex!!.isTimed=it ;replaceExerciseInVM(ex) })
+                    Checkbox(modifier=Modifier.fillMaxWidth(),checked = ex!!.isTimed, onCheckedChange = { ex!!.isTimed=it ;replaceExerciseInVM(ex) })
                 }
 
                 if (ex!!.isTimed) {
-                    TextField(value = ex!!.time.toString(), onValueChange = {
+                    TextField(modifier=Modifier.fillMaxWidth(),value = ex!!.time.toString(), onValueChange = {
                         if(it==""){
                             return@TextField
                         }
                         ex!!.time=it.toInt() ;replaceExerciseInVM(ex)
                                                                             }, label = { Text("Enter time for exercise",color = MaterialTheme.colors.onBackground ) })
                 } else {
-                    TextField(value = ex!!.reps.toString(), onValueChange = {
+                    TextField(modifier=Modifier.fillMaxWidth(),value = ex!!.reps.toString(), onValueChange = {
                         if(it==""){
                             return@TextField
                         }
@@ -330,7 +335,11 @@ fun RestScreen(vm: viewModel) {
                     }
                     Log.d("ExerciseTimer","This is the time of timer: ${curr.value}")
                 }
+                if(vm.isOnRest.value){
+                    vm.getTextToSpeech().speak("Rest is over.",TextToSpeech.QUEUE_FLUSH, null, null)
+                }
                 callback()
+
             }
         })
 
@@ -515,12 +524,14 @@ fun RestScreen(vm: viewModel) {
         val scope = CoroutineScope(Dispatchers.IO)
         val db = vm.getAppDatabase()
 
-        Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-            TextField(
+        Column(modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())) {
+            TextField( modifier=Modifier.fillMaxWidth(),
                 value = "${name.value}",
                 onValueChange = { name.value = it },
                 label = { Text("Enter routine name",color = MaterialTheme.colors.onBackground ) })
-            TextField(
+            TextField(modifier=Modifier.fillMaxWidth(),
                 value = "${description.value}",
                 onValueChange = { description.value = it },
                 label = { Text("Enter description",color = MaterialTheme.colors.onBackground ) })
@@ -576,25 +587,28 @@ fun RestScreen(vm: viewModel) {
         var sets = remember { mutableStateOf(0) }
         var rest = remember { mutableStateOf(0f) }
         var frequency = remember { mutableStateOf(0) }
+        val showHints=remember {
+            mutableStateOf(false)
+        }
 
 
 
         Column() {
-            TextField(
+            TextField(modifier=Modifier.fillMaxWidth(),
                 value = "${name.value}",
                 onValueChange = { name.value = it;exercise.name = it
                                 Log.d("ExerciseInput","${exercise.name}, ${vm.exercisesGettingCreatedNow.value[vm.exercisesGettingCreatedNow.value.size - 1].name}")
                                 },
                 label = { Text("Enter exercise name",color = MaterialTheme.colors.onBackground ) })
-            TextField(
+            TextField(modifier=Modifier.fillMaxWidth(),
                 value = "${description.value}",
                 onValueChange = { description.value = it;exercise.description = it },
                 label = { Text("Enter exercise description",color = MaterialTheme.colors.onBackground ) })
-            TextField(
+            TextField(modifier=Modifier.fillMaxWidth(),
                 value = "${steps.value}",
                 onValueChange = { steps.value = it;exercise.steps = it.split("\n") },
                 label = { Text("Enter exercise steps",color = MaterialTheme.colors.onBackground ) })
-            TextField(
+            TextField(modifier=Modifier.fillMaxWidth(),
                 value = "${sets.value}",
                 onValueChange = {
                     if (it == "") {
@@ -604,7 +618,7 @@ fun RestScreen(vm: viewModel) {
 
                 },
                 label = { Text("Enter number of sets",color = MaterialTheme.colors.onBackground ) })
-            TextField(
+            TextField(modifier=Modifier.fillMaxWidth(),
                 value = "${rest.value}",
                 onValueChange = {
                     if (it == "") {
@@ -614,18 +628,18 @@ fun RestScreen(vm: viewModel) {
 
                 },
                 label = { Text("Enter rest between sets",color = MaterialTheme.colors.onBackground ) })
-            TextField(value = "${frequency.value}", onValueChange = {
+            TextField(modifier=Modifier.fillMaxWidth(),value = "${frequency.value}", onValueChange = {
                 if (it == "") {
                     return@TextField
                 }
                 frequency.value = it.toInt();exercise.frequency = it.toInt()
 
             }, label = {
-                Text("Enter exercise frequency in days",color = MaterialTheme.colors.onBackground )
+                Text("Enter exercise frequency in days. If you put 2 here then if you do this exercise today you get to do it again only after 2 days from today.",color = MaterialTheme.colors.onBackground )
             })
             Row {
                 Text("Is exercise timed?",color = MaterialTheme.colors.onBackground )
-                Checkbox(
+                Checkbox(modifier=Modifier.fillMaxWidth(),
                     checked = isTimed.value,
                     onCheckedChange = { isTimed.value = it;exercise.isTimed = it
 
@@ -633,7 +647,7 @@ fun RestScreen(vm: viewModel) {
             }
 
             if (isTimed.value == true) {
-                TextField(
+                TextField(modifier=Modifier.fillMaxWidth(),
                     value = "${time.value}",
                     onValueChange = {
                         if (it == "") {
@@ -644,7 +658,7 @@ fun RestScreen(vm: viewModel) {
                     },
                     label = { Text("Enter time for exercise",color = MaterialTheme.colors.onBackground ) })
             } else {
-                TextField(
+                TextField(modifier=Modifier.fillMaxWidth(),
                     value = "${reps.value}",
                     onValueChange = {
                         if (it == "") {
