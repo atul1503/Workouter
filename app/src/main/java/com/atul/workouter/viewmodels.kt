@@ -18,7 +18,6 @@ class viewModel: ViewModel() {
     })
     var exercisesThatCanBeDoneToday=mutableStateOf(listOf<Exercise>())
     var currentExerciseIndex=mutableStateOf(0)
-    var currentExerciseTimerStatus=mutableStateOf(TimerStatus.NOT_STARTED)
     var exercisesGettingCreatedNow=mutableStateOf(listOf<Exercise>(Exercise()))
     var isOnRest=mutableStateOf(false)
     var EditRoutine= mutableStateOf(Routine())
@@ -26,11 +25,7 @@ class viewModel: ViewModel() {
     var tts : TextToSpeech?=null
     var ctx: Context?=null
 
-    enum class TimerStatus{
-        STARTED,
-        STOPPED,
-        NOT_STARTED,
-    }
+
 
 
     fun getTextToSpeech(): TextToSpeech {

@@ -217,10 +217,6 @@ fun EditRoutine(vm: viewModel){
 
 fun RestCoroutineWorker(vm:viewModel,exercise: State<Exercise>): Unit {
 
-    Log.d("RestCoroutineWorker","Just before check : ${vm.currentExerciseTimerStatus.value}")
-    if(vm.currentExerciseTimerStatus.value!=viewModel.TimerStatus.STOPPED){
-        return
-    }
     //Log.d("RestCoroutineWorker","Exercise timer status when it stopped. ${vm.currentExerciseTimerStatus.value}")
     vm.incrementSetDoneForExercise(exercise.value)
     Log.d("RestCoroutineWorker","This is the current exercise index: ${vm.currentExerciseIndex.value}, ${vm.getExercisesThatCanBeDoneToday().size}, ${vm.isOnRest.value})")
@@ -260,31 +256,22 @@ fun RestScreen(vm: viewModel) {
 
 
 
-    ExerciseTimer(vm = vm, time = rest.toInt())
+    ExerciseTimer(vm = vm, time = rest.toInt(), {
+        RestCoroutineWorker(vm,exercise)
+    })
     Box(modifier = Modifier.fillMaxWidth()) {
         Text(modifier = Modifier
             .align(Alignment.Center)
             .offset(0.dp, 200.dp), text = "Relax! Take some rest")
     }
 
-    LaunchedEffect(key1 = Unit, block = {
-        vm.isOnRest.value=true
-    })
-
-    LaunchedEffect(key1 = vm.currentExerciseTimerStatus.value, block = {
-        launch(Dispatchers.IO) coroutine@{
-
-            RestCoroutineWorker(vm,exercise)
-            return@coroutine//Log.d("RestScreen", "This is the current exercise index: ${vm.currentExerciseIndex.value}, ${vm.getExercisesThatCanBeDoneToday().size}, ${vm.isOnRest.value}")
-        }
-    })
 }
 
 
 
 
     @Composable
-    fun ExerciseTimer(vm: viewModel,time: Int?) {
+    fun ExerciseTimer(vm: viewModel,time: Int?,callback: ()->Unit){
         var curr = remember {
             mutableStateOf(0f)
         };
@@ -298,7 +285,6 @@ fun RestScreen(vm: viewModel) {
         LaunchedEffect(key1 = Unit, block = {
             launch(Dispatchers.IO) {
                 animTargetState.value=100f
-                vm.currentExerciseTimerStatus.value = viewModel.TimerStatus.STARTED
                 var saidSpeech=false
                 //write log statements to know when this is happening
                 Log.d("ExerciseTimer","The timer has started. This is the current exercise index: ${vm.currentExerciseIndex.value},Whether app is on rest stage: ${vm.isOnRest.value}")
@@ -316,11 +302,7 @@ fun RestScreen(vm: viewModel) {
                     }
                     Log.d("ExerciseTimer","This is the time of timer: ${curr.value}")
                 }
-                vm.currentExerciseTimerStatus.value = viewModel.TimerStatus.STOPPED
-                if(!vm.isOnRest.value){
-                    Log.d("ExerciseTimer","Sending to rest screen")
-                    vm.changeNavigationString("get rest")
-                }
+                callback()
             }
         })
 
@@ -349,7 +331,9 @@ fun RestScreen(vm: viewModel) {
         val exercise = vm.getExercisesThatCanBeDoneToday()[vm.currentExerciseIndex.value]
         if (exercise.isTimed) {
             vm.isOnRest.value=false
-            ExerciseTimer(vm,exercise.time)
+            ExerciseTimer(vm,exercise.time,{
+                vm.changeNavigationString("get rest")
+            })
         } else {
             Column() {
                 Text("Exercise Steps:")
@@ -377,9 +361,7 @@ fun RestScreen(vm: viewModel) {
     @Composable
     fun StartExercisesFromRoutine(vm: viewModel) {
         if(vm.currentExerciseIndex.value >= vm.getExercisesThatCanBeDoneToday().size){
-            //Log.d("RestScreen","Sending back to home")
             vm.currentExerciseIndex.value=0
-            vm.currentExerciseTimerStatus.value=viewModel.TimerStatus.NOT_STARTED
             vm.changeNavigationString("home")
             return
         }
