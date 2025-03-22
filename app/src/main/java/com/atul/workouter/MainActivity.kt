@@ -472,6 +472,7 @@ fun RestScreen(vm: viewModel) {
                 }
                 else if(lastCategory==maxCategory){
                     val firstCategory=exercises[0].category
+                    exercisesThatCanBeDoneToday= exercises.filter { it.category==firstCategory }.toMutableList()
                 }
                 else{
                     //find just higher category
