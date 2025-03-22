@@ -13,9 +13,7 @@ import java.util.Date
 class viewModel: ViewModel() {
     var navigationString= mutableStateOf("home")
     var db: AppDatabase?= null;
-    var currentRoutine=mutableStateOf(Routine().apply {
-        lastDoneDate=null
-    })
+    var currentRoutine=mutableStateOf(Routine())
     var exercisesThatCanBeDoneToday=mutableStateOf(listOf<Exercise>())
     var currentExerciseIndex=mutableStateOf(0)
     var exercisesGettingCreatedNow=mutableStateOf(listOf<Exercise>(Exercise()))
@@ -137,12 +135,11 @@ class viewModel: ViewModel() {
         return exercisesThatCanBeDoneToday.value
     }
 
-    fun setRoutineLastDoneDateAndLastDoneFrequency(routine: Routine,exercise: Exercise){
-        routine.lastDoneDate= Date()
-        routine.lastDoneFrequency=exercise.frequency
-        db!!.routineDao().updateRoutineLastDoneDateAndLastDoneFrequency(routine.name,
-            routine.lastDoneDate!!, routine.lastDoneFrequency)
+    fun saveRoutineAndExerciseLastDoneDate(exercise: Exercise){
+        db!!.exerciseDao().updateExerciseLastDoneDate(exercise.name, Date())
+        db!!.routineDao().updateLastDoneCategory(exercise.category!!,exercise.routineName)
     }
+
 
 }
 

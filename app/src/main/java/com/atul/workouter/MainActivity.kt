@@ -176,9 +176,6 @@ fun EditRoutine(vm: viewModel){
     var exercises=vm.EditExercises
     val db= vm.getAppDatabase()
     val scope= CoroutineScope(Dispatchers.IO)
-    val showHints=remember {
-        mutableStateOf(false)
-    }
 
     LaunchedEffect(key1 = Unit, block = {
         scope.launch {
@@ -210,8 +207,10 @@ fun EditRoutine(vm: viewModel){
                 TextField(modifier=Modifier.fillMaxWidth(),value = ex!!.steps.joinToString("\n"), onValueChange = { ex!!.steps=it.split("\n") ;replaceExerciseInVM(ex) }, label = { Text("Enter exercise steps") })
                 TextField(modifier=Modifier.fillMaxWidth(),value = ex!!.sets.toString(), onValueChange = { ex!!.sets=it.toInt() ;replaceExerciseInVM(ex) }, label = { Text("Enter number of sets") })
                 TextField(modifier=Modifier.fillMaxWidth(),value = ex!!.rest.toString(), onValueChange = { ex!!.rest=it.toFloat() ;replaceExerciseInVM(ex) }, label = { Text("Enter rest between sets") })
-                TextField(modifier=Modifier.fillMaxWidth(),value = ex!!.frequency.toString(), onValueChange = { ex!!.frequency=it.toInt() ;replaceExerciseInVM(ex) }, label = {
-                    Text("Enter exercise frequency in days. If you put 2 here then if you do this exercise today you get to do it again only after 2 days from today.",color = MaterialTheme.colors.onBackground )
+                TextField(modifier = Modifier.fillMaxWidth(), value = ex!!.restTime.toString(), onValueChange = { ex!!.restTime=it.toInt(); replaceExerciseInVM(ex) }, label = {
+                    Text("Enter rest in days. These many days will be skipped before this exercise is scheduled again.",color = MaterialTheme.colors.onBackground ) })
+                TextField(modifier=Modifier.fillMaxWidth(),value = ex!!.category.toString(), onValueChange = { ex!!.category=it.toInt() ;replaceExerciseInVM(ex) }, label = {
+                    Text("Enter exercise category. Exercises in different category will never be allowed in the same day.",color = MaterialTheme.colors.onBackground )
                 })
                 Row {
                     Text("Is exercise timed?",color = MaterialTheme.colors.onBackground )
@@ -259,7 +258,7 @@ fun RestCoroutineWorker(vm:viewModel,exercise: State<Exercise>): Unit {
         vm.incrementExerciseIndex()
         Log.d("RestCoroutineWorker","This is the current exercise index: ${vm.currentExerciseIndex.value}, ${vm.getExercisesThatCanBeDoneToday().size}, ${vm.isOnRest.value}")
         if(vm.getExercisesThatCanBeDoneToday().size<=vm.currentExerciseIndex.value){
-            vm.setRoutineLastDoneDateAndLastDoneFrequency(vm.getCurrentRoutine(),exercise.value)
+            vm.saveRoutineAndExerciseLastDoneDate(exercise.value)
             vm.currentExerciseIndex.value=0
             Log.d("RestCoroutineWorker","Sending back to home because all exercises are done")
             vm.isOnRest.value=false
@@ -439,14 +438,13 @@ fun RestScreen(vm: viewModel) {
             launch(Dispatchers.IO) checker@{
                 var exercises = vm.getCurrentRoutineExercises()
                 var exercisesThatCanBeDoneToday: MutableList<Exercise> = mutableListOf()
-                val routineLastDay = currentRoutine.lastDoneDate
-                val routineLastFreq = currentRoutine.lastDoneFrequency
-                exercises = exercises.sortedBy { it.frequency }
+                val lastCategory=currentRoutine.lastDoneCategory
+                exercises = exercises.sortedBy { it.category }
                 Log.d("RoutineStarter", "This is the routine exercises: ${exercises}")
-                if (routineLastDay == null || currentRoutine.forceRun ) {
+                if (lastCategory == null || currentRoutine.forceRun ) {
                     //filter out exercises which have frequency more than the lowest freuqnecy exercise
-                    val lowestFrequency = exercises[0].frequency
-                    exercisesThatCanBeDoneToday.addAll(exercises.filter { it.frequency == lowestFrequency })
+                    val lowestCategory = exercises[0].category
+                    exercisesThatCanBeDoneToday.addAll(exercises.filter { it.category == lowestCategory })
                     vm.exercisesThatCanBeDoneToday.value = exercisesThatCanBeDoneToday
                     vm.changeNavigationString("start exercises")
 
@@ -454,7 +452,41 @@ fun RestScreen(vm: viewModel) {
                 }
                 //remove all those exercises with last frequency less than the routine last frequency and also remove those exercises whose frequency if you add with last routine date it is after today
                 //Log.d("RoutineStarter", "Get current routine: ${currentRoutine}")
-                exercisesThatCanBeDoneToday.addAll(exercises.filter { it.frequency >= routineLastFreq && it.frequency * 84_400_000L + routineLastDay.time <= System.currentTimeMillis() })
+                val maxCategory=exercises.maxBy { it.category!! }.category
+                exercisesThatCanBeDoneToday=(exercises.filter {
+                    if(it.category==lastCategory){
+                        return@filter false
+                    }
+                    return@filter true
+                }).toMutableList()
+                if(maxCategory!!>lastCategory){
+                    //find just higher category
+                    var nextCategory: Int?=null
+                    for(ex in exercises){
+                        if(ex.category!!>lastCategory){
+                            nextCategory=ex.category
+                            break
+                        }
+                    }
+                    exercisesThatCanBeDoneToday= exercisesThatCanBeDoneToday.filter { it.category==nextCategory }.toMutableList()
+                }
+                else if(lastCategory==maxCategory){
+                    val firstCategory=exercises[0].category
+                }
+                else{
+                    //find just higher category
+                    var nextCategory: Int?=null
+                    for(ex in exercises){
+                        if(ex.category!!>lastCategory){
+                            nextCategory=ex.category
+                            break
+                        }
+                    }
+                    exercisesThatCanBeDoneToday= exercisesThatCanBeDoneToday.filter { it.category==nextCategory }.toMutableList()
+                }
+
+                exercisesThatCanBeDoneToday=exercisesThatCanBeDoneToday.filter { System.currentTimeMillis()-it.lastDoneDate.time >= it.restTime*86_400_000L }.toMutableList()
+
                 Log.d("RoutineStarter", "These are the exercises that can be done today: ${exercisesThatCanBeDoneToday}")
 
                 vm.changeExercisesThatCanBeDoneToday(exercisesThatCanBeDoneToday)
@@ -548,7 +580,7 @@ fun RestScreen(vm: viewModel) {
             Button(onClick = {
                 scope.launch {
                     Log.d("exercise", "Creating routine")
-                    val routine = Routine(name.value, description.value, Date(), 0)
+                    val routine = Routine(name.value, description.value, null, false)
                     db.routineDao().insertRoutine(routine)
                     val exercises=vm.exercisesGettingCreatedNow.value
                     Log.d("CreateRoutine","These are the exercises: ${exercises}")
@@ -586,7 +618,8 @@ fun RestScreen(vm: viewModel) {
         var reps = remember { mutableStateOf(0) }
         var sets = remember { mutableStateOf(0) }
         var rest = remember { mutableStateOf(0f) }
-        var frequency = remember { mutableStateOf(0) }
+        var category = remember { mutableStateOf(0) }
+        var restInDays= remember { mutableStateOf(0) }
         val showHints=remember {
             mutableStateOf(false)
         }
@@ -609,6 +642,10 @@ fun RestScreen(vm: viewModel) {
                 onValueChange = { steps.value = it;exercise.steps = it.split("\n") },
                 label = { Text("Enter exercise steps",color = MaterialTheme.colors.onBackground ) })
             TextField(modifier=Modifier.fillMaxWidth(),
+                value = "${restInDays.value}",
+                onValueChange = { restInDays.value = it.toInt();exercise.restTime = it.toInt() },
+                label = { Text("Enter rest in days. These many days will be skipped before this exercise is scheduled again.",color = MaterialTheme.colors.onBackground ) })
+            TextField(modifier=Modifier.fillMaxWidth(),
                 value = "${sets.value}",
                 onValueChange = {
                     if (it == "") {
@@ -628,14 +665,14 @@ fun RestScreen(vm: viewModel) {
 
                 },
                 label = { Text("Enter rest between sets",color = MaterialTheme.colors.onBackground ) })
-            TextField(modifier=Modifier.fillMaxWidth(),value = "${frequency.value}", onValueChange = {
+            TextField(modifier=Modifier.fillMaxWidth(),value = "${category.value}", onValueChange = {
                 if (it == "") {
                     return@TextField
                 }
-                frequency.value = it.toInt();exercise.frequency = it.toInt()
+                category.value = it.toInt();exercise.category = it.toInt()
 
             }, label = {
-                Text("Enter exercise frequency in days. If you put 2 here then if you do this exercise today you get to do it again only after 2 days from today.",color = MaterialTheme.colors.onBackground )
+                Text("Enter exercise category. Exercises in different category will never be allowed in the same day.",color = MaterialTheme.colors.onBackground )
             })
             Row {
                 Text("Is exercise timed?",color = MaterialTheme.colors.onBackground )

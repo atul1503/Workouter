@@ -61,8 +61,7 @@ data class Routine(
     @PrimaryKey
     var name: String="",
     var description: String="",
-    var lastDoneDate: Date?=null,
-    var lastDoneFrequency: Int=0,
+    var lastDoneCategory: Int?=null,
     @Ignore var forceRun: Boolean=false
 )
 
@@ -79,12 +78,14 @@ data class Exercise(
     var sets: Int=0,
     var rest: Float=30f,
     var steps: List<String> = listOf(""),
-    var frequency: Int=0,
+    var restTime: Int=0, //in days
+    var lastDoneDate: Date= Date(),
     var routineName: String="",
+    var category: Int?=null,
     @Ignore var setsDone: Int=0,
     ): Cloneable {
     public override fun clone(): Exercise {
-        val ex=copy(name=name, description=description, isTimed=isTimed, time=time, reps=reps, sets=sets, rest=rest, steps=steps, frequency=frequency, routineName=routineName)
+        val ex=copy(name=name, description=description, isTimed=isTimed, time=time, reps=reps, sets=sets, rest=rest, steps=steps, restTime=restTime, routineName=routineName, lastDoneDate = lastDoneDate, category = category)
         ex.steps=steps.toList()
         return ex
     }
@@ -104,6 +105,9 @@ data class ExerciseWithRoutine(
 
 @Dao
 interface ExerciseDao {
+
+        @Query("UPDATE Exercise SET lastDoneDate= :date WHERE name= :name")
+        abstract fun updateExerciseLastDoneDate(name: String, date: Date)
 
         @Insert
         abstract fun insertExercise(exercise: Exercise)
@@ -125,6 +129,9 @@ interface ExerciseDao {
 @Dao
 interface  RoutineDao {
 
+    @Query("UPDATE Routine SET lastDoneCategory= :category WHERE name= :name")
+    abstract fun updateLastDoneCategory(category: Int, name: String)
+
     @Insert
     abstract fun insertRoutine(routine: Routine)
 
@@ -144,14 +151,12 @@ interface  RoutineDao {
     @Query("SELECT * FROM Routine WHERE name= :name")
     abstract fun getRoutineWithExercises(name: String): List<ExerciseWithRoutine>
 
-    @Query("UPDATE Routine SET lastDoneDate= :date, lastDoneFrequency= :frequency WHERE name= :name")
-    abstract fun updateRoutineLastDoneDateAndLastDoneFrequency(name: String, date: Date, frequency: Int)
 
 
 }
 
 
-@Database(entities = [Routine::class, Exercise::class], version = 7)
+@Database(entities = [Routine::class, Exercise::class], version = 8)
 @TypeConverters(ExerciseListConverter::class)
 abstract class AppDatabase: RoomDatabase() {
     abstract fun routineDao(): RoutineDao
