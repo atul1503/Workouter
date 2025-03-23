@@ -8,6 +8,7 @@ import android.speech.tts.TextToSpeech
 import android.util.Log
 import androidx.compose.ui.unit.sp
 import android.view.autofill.AutofillManager
+import androidx.activity.compose.BackHandler
 import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.core.LinearEasing
@@ -384,7 +385,7 @@ fun RestScreen(vm: viewModel) {
                 Text("Rest after each set: ${exercise.rest} seconds",color = MaterialTheme.colors.onBackground )
                 Text("Exercise Reps: ${exercise.reps}",color = MaterialTheme.colors.onBackground )
                 vm.isOnRest.value=false
-                Button(onClick = {
+                Button(modifier = Modifier.fillMaxWidth(), onClick = {
                     vm.changeNavigationString("get rest")
                 }) {
                     Text("Get little rest!",color = MaterialTheme.colors.onBackground )
@@ -405,24 +406,63 @@ fun RestScreen(vm: viewModel) {
         val exercises = vm.getExercisesThatCanBeDoneToday()
         val currentExerciseIndex = vm.currentExerciseIndex
         val currentExercise = exercises[currentExerciseIndex.value]
-        Column() {
-            Text("Exercise name: ${currentExercise.name}",color = MaterialTheme.colors.onBackground )
-            Text("Exercise Description: ${currentExercise.description}",color = MaterialTheme.colors.onBackground )
-            Text("Exercise steps:",color = MaterialTheme.colors.onBackground )
-            for(ex in currentExercise.steps){
-                Text(ex,color = MaterialTheme.colors.onBackground )
-            }
-            Text("Sets done: ${currentExercise.setsDone}/${currentExercise.sets}",color = MaterialTheme.colors.onBackground )
-            Text("Exercise Rest: ${currentExercise.rest}",color = MaterialTheme.colors.onBackground )
-            if (currentExercise.isTimed) {
-                Text("Exercise Time: ${currentExercise.time}",color = MaterialTheme.colors.onBackground )
-            } else {
-                Text("Exercise Reps: ${currentExercise.reps}",color = MaterialTheme.colors.onBackground )
-            }
-            Button(onClick = {
-                vm.changeNavigationString("start current exercise")
-            }) {
-                Text("Start exercise",color = MaterialTheme.colors.onBackground )
+        Box(contentAlignment = Alignment.Center) {
+            Column() {
+                Text(
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    text = "Exercise name: ${currentExercise.name}",
+                    color = MaterialTheme.colors.onBackground
+                )
+                Text(
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    text = "Exercise Description: ${currentExercise.description}",
+                    color = MaterialTheme.colors.onBackground
+                )
+                Text(
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    text = "Exercise steps:",
+                    color = MaterialTheme.colors.onBackground
+                )
+                for (ex in currentExercise.steps) {
+                    Text(
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                        text = ex,
+                        color = MaterialTheme.colors.onBackground
+                    )
+                }
+                Text(
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    text = "Sets done: ${currentExercise.setsDone}/${currentExercise.sets}",
+                    color = MaterialTheme.colors.onBackground
+                )
+                Text(
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    text = "Exercise Rest: ${currentExercise.rest}",
+                    color = MaterialTheme.colors.onBackground
+                )
+                if (currentExercise.isTimed) {
+                    Text(
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                        text = "Exercise Time: ${currentExercise.time}",
+                        color = MaterialTheme.colors.onBackground
+                    )
+                } else {
+                    Text(
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                        text = "Exercise Reps: ${currentExercise.reps}",
+                        color = MaterialTheme.colors.onBackground
+                    )
+                }
+                BackHandler() {
+                    vm.changeNavigationString("see all routines")
+                }
+                Button(modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.End), onClick = {
+                    vm.changeNavigationString("start current exercise")
+                }) {
+                    Text("Start exercise", color = MaterialTheme.colors.onBackground)
+                }
             }
         }
     }
@@ -711,6 +751,8 @@ fun RestScreen(vm: viewModel) {
 
     @Composable
     fun ExerciseViewForRoutineView(exercise: Exercise, vm: viewModel) {
+
+
         Column() {
             Text("Exercise name: ${exercise.name}",color = MaterialTheme.colors.onBackground )
             Text("Exercise Description: ${exercise.description}",color = MaterialTheme.colors.onBackground )
@@ -732,6 +774,12 @@ fun RestScreen(vm: viewModel) {
         val forceRun= remember {
             mutableStateOf(false)
         }
+
+        BackHandler() {
+            vm.changeNavigationString("home")
+        }
+
+
         LaunchedEffect(key1 = routine.name, block = {
             launch(Dispatchers.IO) {
                 vm.changeCurrentRoutine(routine)
