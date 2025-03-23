@@ -273,34 +273,6 @@ fun RestCoroutineWorker(vm:viewModel,exercise: State<Exercise>): Unit {
     }
 }
 
-fun _RestCoroutineWorker(vm:viewModel,exercise: State<Exercise>): Unit {
-
-    //Log.d("RestCoroutineWorker","Exercise timer status when it stopped. ${vm.currentExerciseTimerStatus.value}")
-    vm.incrementSetDoneForExercise(exercise.value)
-    Log.d("RestCoroutineWorker","This is the current exercise index: ${vm.currentExerciseIndex.value}, ${vm.getExercisesThatCanBeDoneToday().size}, ${vm.isOnRest.value})")
-    if(vm.getThisExerciseFromETCBDT(exercise.value.name).setsDone>=exercise.value.sets){
-        vm.setSetsDoneForExercise(exercise.value,0)
-        vm.incrementExerciseIndex()
-        Log.d("RestCoroutineWorker","This is the current exercise index: ${vm.currentExerciseIndex.value}, ${vm.getExercisesThatCanBeDoneToday().size}, ${vm.isOnRest.value}")
-        if(vm.getExercisesThatCanBeDoneToday().size<=vm.currentExerciseIndex.value){
-            vm.saveRoutineAndExerciseLastDoneDate(exercise.value)
-            vm.currentExerciseIndex.value=0
-            Log.d("RestCoroutineWorker","Sending back to home because all exercises are done")
-            vm.isOnRest.value=false
-            vm.changeNavigationString("home")
-            return
-        }
-        Log.d("RestCoroutineWorker"," ${exercise}")
-        Log.d("RestCoroutineWorker","Sending to start exercises because all sets are done")
-        vm.changeNavigationString("start exercises")
-
-    }
-    else{
-        Log.d("RestCoroutineWorker","Sending to start exercises because all sets are not done")
-        vm.changeNavigationString("start exercises")
-    }
-
-}
 
 
 @Composable
