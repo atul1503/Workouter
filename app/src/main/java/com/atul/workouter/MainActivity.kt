@@ -88,12 +88,6 @@ class MainActivity : AppCompatActivity() {
 
         viewmodel.getTextToSpeech()
 
-        /*
-        CoroutineScope(Dispatchers.IO).launch {
-         db.routineDao().deleteAll()
-         db.exerciseDao().deleteAll()
-        }
-         */
 
         setContent {
 
@@ -244,7 +238,7 @@ fun EditRoutine(vm: viewModel){
                 vm.changeNavigationString("home")
             }
         }) {
-            Text("Save routine",color = MaterialTheme.colors.onBackground )
+            Text("Save routine",color = Color.White )
         }
     }
 }
@@ -388,7 +382,7 @@ fun RestScreen(vm: viewModel) {
                 Button(modifier = Modifier.fillMaxWidth(), onClick = {
                     vm.changeNavigationString("get rest")
                 }) {
-                    Text("Get little rest!",color = MaterialTheme.colors.onBackground )
+                    Text("Get little rest!",color = Color.White )
                 }
             }
         }
@@ -461,7 +455,7 @@ fun RestScreen(vm: viewModel) {
                     .align(Alignment.End), onClick = {
                     vm.changeNavigationString("start current exercise")
                 }) {
-                    Text("Start exercise", color = MaterialTheme.colors.onBackground)
+                    Text("Start exercise", color = Color.White)
                 }
             }
         }
@@ -615,7 +609,7 @@ fun RestScreen(vm: viewModel) {
                 vm.exercisesGettingCreatedNow.value= vm.exercisesGettingCreatedNow.value.plus(Exercise())
 
             }) {
-                Text("Add exercise",color = MaterialTheme.colors.onBackground )
+                Text("Add exercise",color = Color.White )
             }
 
             Button(onClick = {
@@ -640,7 +634,7 @@ fun RestScreen(vm: viewModel) {
 
 
             }) {
-                Text("Looks good?",color = MaterialTheme.colors.onBackground )
+                Text("Looks good?",color = Color.White )
             }
         }
 
@@ -800,13 +794,13 @@ fun RestScreen(vm: viewModel) {
                 vm.changeNavigationString("start routine")
                 Log.d("exercise","${vm.getCurrentRoutine()}, ${vm.getNavigationString()}")
             }) {
-                Text("Start routine",color = MaterialTheme.colors.onBackground )
+                Text("Start routine",color = Color.White )
             }
             Button(onClick = {
                 vm.EditRoutine.value=routine
                 vm.changeNavigationString("edit routine")
             }) {
-                Text("Edit routine",color = MaterialTheme.colors.onBackground )
+                Text("Edit routine",color = Color.White )
             }
             Checkbox(checked = forceRun.value, onCheckedChange = { forceRun.value=it; routine.forceRun = it })
             Text(text = "Force routine?",color = MaterialTheme.colors.onBackground )
@@ -828,6 +822,10 @@ fun RestScreen(vm: viewModel) {
 
             }
         })
+
+        BackHandler() {
+            vm.changeNavigationString("home")
+        }
 
         Log.d("routine", "All routine view recomposed")
         Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
