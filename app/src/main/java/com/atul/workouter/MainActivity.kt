@@ -244,6 +244,36 @@ fun EditRoutine(vm: viewModel){
 }
 
 fun RestCoroutineWorker(vm:viewModel,exercise: State<Exercise>): Unit {
+    vm.incrementSetDoneForExercise(exercise.value)
+    Log.d("RestCoroutineWorker","This was the exercise: ${vm.getExercisesThatCanBeDoneToday()[vm.currentExerciseIndex.value]} ")
+    if(vm.getThisExerciseFromETCBDT(exercise.value.name).sets>=exercise.value.setsDone){
+        vm.saveRoutineAndExerciseLastDoneDate(exercise.value)
+    }
+    if(vm.currentExerciseIndex.value>=vm.exercisesThatCanBeDoneToday.value.size-1){
+        vm.currentExerciseIndex.value=0
+    }else {
+        vm.incrementExerciseIndex()
+    }
+
+    Log.d("RestCoroutineWorker","This is the next exercise: ${vm.getExercisesThatCanBeDoneToday()[vm.currentExerciseIndex.value]} ")
+
+    var isRoutineDone=true
+    for(ex in vm.exercisesThatCanBeDoneToday.value){
+        if(ex.setsDone<ex.sets){
+            isRoutineDone=false
+        }
+    }
+    if(isRoutineDone){
+        vm.saveRoutineAndExerciseLastDoneDate(exercise.value)
+        vm.currentExerciseIndex.value=0
+        vm.isOnRest.value=false
+        vm.changeNavigationString("home")
+    }else {
+        vm.changeNavigationString("start exercises")
+    }
+}
+
+fun _RestCoroutineWorker(vm:viewModel,exercise: State<Exercise>): Unit {
 
     //Log.d("RestCoroutineWorker","Exercise timer status when it stopped. ${vm.currentExerciseTimerStatus.value}")
     vm.incrementSetDoneForExercise(exercise.value)

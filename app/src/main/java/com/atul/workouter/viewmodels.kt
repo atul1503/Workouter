@@ -16,13 +16,16 @@ class viewModel: ViewModel() {
     var currentRoutine=mutableStateOf(Routine())
     var exercisesThatCanBeDoneToday=mutableStateOf(listOf<Exercise>())
     var currentExerciseIndex=mutableStateOf(0)
+
+
     var exercisesGettingCreatedNow=mutableStateOf(listOf<Exercise>(Exercise()))
     var isOnRest=mutableStateOf(false)
     var EditRoutine= mutableStateOf(Routine())
     var EditExercises= mutableStateListOf<Exercise>()
+
+
     var tts : TextToSpeech?=null
     var ctx: Context?=null
-
 
 
 
