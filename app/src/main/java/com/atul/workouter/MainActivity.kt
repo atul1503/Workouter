@@ -210,7 +210,7 @@ fun EditRoutine(vm: viewModel){
                 TextField(modifier=Modifier.fillMaxWidth(),value = ex!!.rest.toString(), onValueChange = { if(it=="") return@TextField; ex!!.rest=it.toFloat() ;replaceExerciseInVM(ex) }, label = { Text("Enter rest between sets") })
                 TextField(modifier = Modifier.fillMaxWidth(), value = ex!!.restTime.toString(), onValueChange = { if(it=="") return@TextField; ex!!.restTime=it.toInt(); replaceExerciseInVM(ex) }, label = {
                     Text("Enter rest in days. These many days will be skipped before this exercise is scheduled again.",color = MaterialTheme.colors.onBackground ) })
-                TextField(modifier=Modifier.fillMaxWidth(),value = ex!!.category.toString(), onValueChange = { if(it=="") return@TextField; ex!!.category=it.toInt() ;replaceExerciseInVM(ex) }, label = {
+                TextField(modifier=Modifier.fillMaxWidth(),value = if(ex!!.category!=null) ex!!.category.toString() else "1" , onValueChange = { if(it=="") return@TextField; ex!!.category=it.toInt() ;replaceExerciseInVM(ex) }, label = {
                     Text("Enter exercise category. Exercises in different category will never be allowed in the same day.",color = MaterialTheme.colors.onBackground )
                 })
                 Row {
