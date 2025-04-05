@@ -99,7 +99,7 @@ data class ExerciseWithRoutine(
         parentColumn = "name",
         entityColumn = "routineName"
     )
-    val exercise: List<Exercise>,
+    val exercises: List<Exercise>,
     @Embedded
     val routine: Routine)
 

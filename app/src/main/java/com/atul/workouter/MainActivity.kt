@@ -50,6 +50,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -158,7 +159,7 @@ fun Navigator(vm: viewModel) {
 
 @Composable
 fun EditRoutine(vm: viewModel){
-    val routine= vm.EditRoutine.value
+    val routine= vm.EditRoutine
 
 
     val name= routine.name
@@ -172,68 +173,128 @@ fun EditRoutine(vm: viewModel){
     val db= vm.getAppDatabase()
     val scope= CoroutineScope(Dispatchers.IO)
 
-    LaunchedEffect(key1 = Unit, block = {
-        scope.launch {
-            vm.EditExercises.addAll(vm.getExercisesOfRoutine(routine))
-        }
-    })
-
-    fun replaceExerciseInVM(ex: Exercise){
-        var len=vm.EditExercises.size;
-        vm.EditExercises.addAll(vm.EditExercises.map {
-            if(it.name==ex.name){
-                ex
-            }else{
-                it
-            }
-        })
-        Log.d("EditRoutine","This is the length of exercises: ${vm.EditExercises.size}")
-        vm.EditExercises.removeRange(0,len)
-        Log.d("EditRoutine","This is the length of exercises: ${vm.EditExercises.size}")
+    BackHandler() {
+        vm.changeNavigationString("see all routines")
     }
+
 
     Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
         TextField(modifier=Modifier.fillMaxWidth(),value = description.value, onValueChange = { description.value=it; routine.description=it }, label = { Text("Enter routine description") })
         Text("Exercises",color = MaterialTheme.colors.onBackground )
         for(ex in exercises){
-            Column {
-                TextField(modifier=Modifier.fillMaxWidth(),value = ex!!.name, onValueChange = { ex!!.name=it;replaceExerciseInVM(ex) }, label = { Text("Enter exercise name",color = MaterialTheme.colors.onBackground ) })
-                TextField(modifier=Modifier.fillMaxWidth(),value = ex!!.description, onValueChange = { ex!!.description=it ;replaceExerciseInVM(ex) }, label = { Text("Enter exercise description") })
-                TextField(modifier=Modifier.fillMaxWidth(),value = ex!!.steps.joinToString("\n"), onValueChange = { ex!!.steps=it.split("\n") ;replaceExerciseInVM(ex) }, label = { Text("Enter exercise steps") })
-                TextField(modifier=Modifier.fillMaxWidth(),value = ex!!.sets.toString(), onValueChange = { if(it=="") return@TextField; ex!!.sets=it.toInt() ;replaceExerciseInVM(ex) }, label = { Text("Enter number of sets") })
-                TextField(modifier=Modifier.fillMaxWidth(),value = ex!!.rest.toString(), onValueChange = { if(it=="") return@TextField; ex!!.rest=it.toFloat() ;replaceExerciseInVM(ex) }, label = { Text("Enter rest between sets") })
-                TextField(modifier = Modifier.fillMaxWidth(), value = ex!!.restTime.toString(), onValueChange = { if(it=="") return@TextField; ex!!.restTime=it.toInt(); replaceExerciseInVM(ex) }, label = {
-                    Text("Enter rest in days. These many days will be skipped before this exercise is scheduled again.",color = MaterialTheme.colors.onBackground ) })
-                TextField(modifier=Modifier.fillMaxWidth(),value = if(ex!!.category!=null) ex!!.category.toString() else "1" , onValueChange = { if(it=="") return@TextField; ex!!.category=it.toInt() ;replaceExerciseInVM(ex) }, label = {
-                    Text("Enter exercise category. Exercises in different category will never be allowed in the same day.",color = MaterialTheme.colors.onBackground )
-                })
-                Row {
-                    Text("Is exercise timed?",color = MaterialTheme.colors.onBackground )
-                    Checkbox(modifier=Modifier.fillMaxWidth(),checked = ex!!.isTimed, onCheckedChange = { ex!!.isTimed=it ;replaceExerciseInVM(ex) })
-                }
 
-                if (ex!!.isTimed) {
-                    TextField(modifier=Modifier.fillMaxWidth(),value = ex!!.time.toString(), onValueChange = {
-                        if(it==""){
-                            return@TextField
-                        }
-                        ex!!.time=it.toInt() ;replaceExerciseInVM(ex)
-                                                                            }, label = { Text("Enter time for exercise",color = MaterialTheme.colors.onBackground ) })
-                } else {
-                    TextField(modifier=Modifier.fillMaxWidth(),value = ex!!.reps.toString(), onValueChange = {
-                        if(it==""){
-                            return@TextField
-                        }
+            // key to identify exercise
+            key(ex.name.value) {
 
-                        ex!!.reps=it.toInt() ;replaceExerciseInVM(ex) }, label = { Text("Enter number of reps",color = MaterialTheme.colors.onBackground ) })
+                Column {
+                    TextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = ex.name.value,
+                        onValueChange = { ex.name.value = it },
+                        label = {
+                            Text(
+                                "Enter exercise name",
+                                color = MaterialTheme.colors.onBackground
+                            )
+                        })
+                    TextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = ex.description.value,
+                        onValueChange = { ex.description.value = it },
+                        label = { Text("Enter exercise description") })
+                    TextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = ex.steps.value.joinToString("\n"),
+                        onValueChange = { ex.steps.value = it.split("\n") },
+                        label = { Text("Enter exercise steps") })
+                    TextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = ex.sets.value.toString(),
+                        onValueChange = {
+                            if (it == "") return@TextField; ex.sets.value = it.toInt()
+                        },
+                        label = { Text("Enter number of sets") })
+                    TextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = ex.rest.value.toString(),
+                        onValueChange = {
+                            if (it == "") return@TextField; ex.rest.value = it.toInt()
+                        },
+                        label = { Text("Enter rest between sets") })
+                    TextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = ex.restTime.value.toString(),
+                        onValueChange = {
+                            if (it == "") return@TextField; ex.restTime.value = it.toInt();
+                        },
+                        label = {
+                            Text(
+                                "Enter rest in days. These many days will be skipped before this exercise is scheduled again.",
+                                color = MaterialTheme.colors.onBackground
+                            )
+                        })
+                    TextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = if (ex.category.value != null) ex.category.value.toString() else "1",
+                        onValueChange = {
+                            if (it == "") return@TextField; ex.category.value = it.toInt()
+                        },
+                        label = {
+                            Text(
+                                "Enter exercise category. Exercises in different category will never be allowed in the same day.",
+                                color = MaterialTheme.colors.onBackground
+                            )
+                        })
+                    Row {
+                        Text("Is exercise timed?", color = MaterialTheme.colors.onBackground)
+                        Checkbox(
+                            modifier = Modifier.fillMaxWidth(),
+                            checked = ex.isTimed.value,
+                            onCheckedChange = { ex!!.isTimed.value = it })
+                    }
+
+                    if (ex.isTimed.value) {
+                        TextField(
+                            modifier = Modifier.fillMaxWidth(),
+                            value = ex.time.value.toString(),
+                            onValueChange = {
+                                if (it == "") {
+                                    return@TextField
+                                }
+                                ex.time.value = it.toInt()
+                            },
+                            label = {
+                                Text(
+                                    "Enter time for exercise",
+                                    color = MaterialTheme.colors.onBackground
+                                )
+                            })
+                    } else {
+                        TextField(
+                            modifier = Modifier.fillMaxWidth(),
+                            value = ex.reps.value.toString(),
+                            onValueChange = {
+                                if (it == "") {
+                                    return@TextField
+                                }
+
+                                ex.reps.value = it.toInt()
+                            },
+                            label = {
+                                Text(
+                                    "Enter number of reps",
+                                    color = MaterialTheme.colors.onBackground
+                                )
+                            })
+                    }
                 }
             }
         }
         Button(onClick = {
             scope.launch {
                 for(ex in exercises){
-                    db.exerciseDao().deleteThisExercise(ex!!.name)
-                    db.exerciseDao().insertExercise(ex!!)
+                    db.exerciseDao().deleteThisExercise(ex.name.value)
+                    db.exerciseDao().insertExercise(ex.toExercise())
                 }
                 vm.changeNavigationString("home")
             }
@@ -475,7 +536,7 @@ fun RestScreen(vm: viewModel) {
                 var exercises = vm.getCurrentRoutineExercises()
                 var exercisesThatCanBeDoneToday: MutableList<Exercise> = mutableListOf()
                 val lastCategory=currentRoutine.lastDoneCategory
-                val restDurationUnit=86_400_000L // 86_400_000 milliseconds = 1 day
+                val restDurationUnit=86_400_000L // 86_400_000L milliseconds = 1 day
                 exercises = exercises.sortedBy { it.category }
                 Log.d("RoutineStarter", "This is the routine exercises: ${exercises}")
                 if (lastCategory == null || currentRoutine.forceRun ) {
@@ -772,6 +833,8 @@ fun RestScreen(vm: viewModel) {
             mutableStateOf(false)
         }
 
+        val scope= CoroutineScope(Dispatchers.IO)
+
         BackHandler() {
             vm.changeNavigationString("home")
         }
@@ -800,7 +863,10 @@ fun RestScreen(vm: viewModel) {
                 Text("Start routine",color = Color.White )
             }
             Button(onClick = {
-                vm.EditRoutine.value=routine
+                vm.EditRoutine=routine
+                scope.launch {
+                    vm.EditExercises=vm.getExercisesOfRoutine(routine)
+                }
                 vm.changeNavigationString("edit routine")
             }) {
                 Text("Edit routine",color = Color.White )

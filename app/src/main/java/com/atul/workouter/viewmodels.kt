@@ -2,6 +2,7 @@ package com.atul.workouter
 
 import android.content.Context
 import android.speech.tts.TextToSpeech
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -20,8 +21,8 @@ class viewModel: ViewModel() {
 
     var exercisesGettingCreatedNow=mutableStateOf(listOf<Exercise>(Exercise()))
     var isOnRest=mutableStateOf(false)
-    var EditRoutine= mutableStateOf(Routine())
-    var EditExercises= mutableStateListOf<Exercise>()
+    var EditRoutine= Routine()
+    var EditExercises= listOf<MutableStateExercise>()
 
 
     var tts : TextToSpeech?=null
@@ -84,8 +85,28 @@ class viewModel: ViewModel() {
        }
     }
 
-    fun getExercisesOfRoutine(routine: Routine): List<Exercise>{
-        return db!!.routineDao().getRoutineWithExercises(routine.name)[0].exercise
+    fun getExercisesOfRoutine(routine: Routine): List<MutableStateExercise>{
+        // get mutable exercises of routine
+        val exs = db!!.routineDao().getRoutineWithExercises(routine.name)[0].exercises.map map@{
+            val mut=MutableStateExercise(
+                name=mutableStateOf(it.name),
+                description = mutableStateOf(it.description),
+                isTimed = mutableStateOf(it.isTimed),
+                time = mutableStateOf(it.time),
+                reps = mutableStateOf(it.reps),
+                sets = mutableStateOf(it.sets),
+                rest = mutableStateOf(it.rest.toInt()),
+                steps = mutableStateOf(it.steps),
+                restTime = mutableStateOf(it.restTime.toInt()),
+                category = mutableStateOf(it.category!!),
+                routineName = it.routineName,
+                lastDoneDate = it.lastDoneDate,
+                setsDone = it.setsDone
+            )
+            return@map mut
+
+        }
+        return exs
     }
 
     fun getExerciseByName(name: String): Exercise{
@@ -106,7 +127,7 @@ class viewModel: ViewModel() {
 
 
     fun getEditRoutineExercises(): List<Exercise>{
-        return db!!.routineDao().getRoutineWithExercises(EditRoutine.value.name)[0].exercise
+        return db!!.routineDao().getRoutineWithExercises(EditRoutine.name)[0].exercises
     }
 
     fun incrementExerciseIndex(){
@@ -127,7 +148,7 @@ class viewModel: ViewModel() {
     }
 
     fun getCurrentRoutineExercises(): List<Exercise>{
-        return db!!.routineDao().getRoutineWithExercises(currentRoutine.value.name)[0].exercise
+        return db!!.routineDao().getRoutineWithExercises(currentRoutine.value.name)[0].exercises
     }
 
     fun changeExercisesThatCanBeDoneToday(exercises: List<Exercise>){
@@ -143,6 +164,44 @@ class viewModel: ViewModel() {
         db!!.routineDao().updateLastDoneCategory(exercise.category!!,exercise.routineName)
     }
 
+
+}
+
+
+class MutableStateExercise(
+    var name: MutableState<String>,
+    var description: MutableState<String>,
+    var isTimed: MutableState<Boolean>,
+    var time: MutableState<Int>,
+    var reps: MutableState<Int>,
+    var sets: MutableState<Int>,
+    var rest:  MutableState<Int>,
+    var steps:  MutableState<List<String>>,
+    var restTime: MutableState<Int>,
+    var category: MutableState<Int>,
+    var routineName: String,
+    var lastDoneDate: Date,
+    var setsDone: Int,
+) {
+
+    fun toExercise(): Exercise {
+        return Exercise(
+            name = name.value,
+            description = description.value,
+            isTimed = isTimed.value,
+            time = time.value,
+            reps = reps.value,
+            sets = sets.value,
+            rest = rest.value.toFloat(),
+            steps = steps.value,
+            restTime = restTime.value,
+            routineName = routineName,
+            lastDoneDate = lastDoneDate,
+            category = category.value,
+            setsDone = setsDone,
+
+        )
+    }
 
 }
 
