@@ -310,10 +310,15 @@ fun RestCoroutineWorker(vm:viewModel,exercise: State<Exercise>): Unit {
     if(vm.getThisExerciseFromETCBDT(exercise.value.name).sets>=exercise.value.setsDone){
         vm.saveRoutineAndExerciseLastDoneDate(exercise.value)
     }
-    if(vm.currentExerciseIndex.value>=vm.exercisesThatCanBeDoneToday.value.size-1){
-        vm.currentExerciseIndex.value=0
-    }else {
-        vm.incrementExerciseIndex()
+
+    var DoneCount=0
+    while(vm.exercisesThatCanBeDoneToday.value[vm.currentExerciseIndex.value].setsDone>=vm.exercisesThatCanBeDoneToday.value[vm.currentExerciseIndex.value].sets && DoneCount<vm.getExercisesThatCanBeDoneToday().size-1){
+        if (vm.currentExerciseIndex.value >= vm.exercisesThatCanBeDoneToday.value.size - 1) {
+            vm.currentExerciseIndex.value = 0
+        } else {
+            vm.incrementExerciseIndex()
+        }
+        DoneCount++
     }
 
     Log.d("RestCoroutineWorker","This is the next exercise: ${vm.getExercisesThatCanBeDoneToday()[vm.currentExerciseIndex.value]} ")
