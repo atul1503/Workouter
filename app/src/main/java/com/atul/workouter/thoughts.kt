@@ -13,3 +13,11 @@ Even if the exercise can be done today or not can be determined by how much days
 
 Sounds good.
  */
+
+
+/*
+TODO
+
+1. Exercises who have few sets to be done, are getting done more than that because the other exercise have more sets than it. This is happening because we don't want any exercise set to not start immeditaley after its previous set so we are shuffeling the sets of each exercise but since higher set exercise has more set, it wants even completed eexercises to be done again.
+
+*/
