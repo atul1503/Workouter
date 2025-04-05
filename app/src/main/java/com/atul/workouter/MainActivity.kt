@@ -94,16 +94,18 @@ class MainActivity : AppCompatActivity() {
 
             val myColor=if(isSystemInDarkTheme()){
                 darkColors(
-                    primary = Color.Blue,
-                    secondary = Color.Red,
-                    background = Color.White
+                    primary = Color(0xFF4DB6AC),
+                    secondary = Color(0xFFFFF176),
+                    background = Color(0xFF1B1B1B),
+                    onPrimary = Color.Black,
                 )
             }
             else{
                 lightColors(
-                    primary = Color.Blue,
-                    secondary = Color.Red,
-                    background = Color.Black
+                    primary = Color(0xFF00897B) ,
+                    secondary = Color(0xFFFFD54F) ,
+                    background = Color(0xFFF9FBE7) ,
+                    onPrimary = Color.White,
                 )
             }
 
@@ -116,6 +118,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 }
+
 
 @Composable
 fun Navigator(vm: viewModel) {
@@ -155,6 +158,32 @@ fun Navigator(vm: viewModel) {
 
 
 
+
+@Composable
+fun KeyValueRow(key: String, value: Any) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(4.dp), horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(key, color = MaterialTheme.colors.onBackground)
+        if (value is String) {
+            Text(value, color = MaterialTheme.colors.onBackground)
+        } else if (value is Iterable<*>) {
+            Text(value.joinToString(", "), color = MaterialTheme.colors.onBackground)
+        } else if (value is Int) {
+            Text(value.toString(), color = MaterialTheme.colors.onBackground)
+        } else if (value is Float) {
+            Text(value.toString(), color = MaterialTheme.colors.onBackground)
+        } else if (value is Boolean) {
+            Text(value.toString(), color = MaterialTheme.colors.onBackground)
+        } else if (value is Date) {
+            Text(value.toString(), color = MaterialTheme.colors.onBackground)
+        } else {
+            Text("Unknown type", color = MaterialTheme.colors.onBackground)
+        }
+    }
+}
 
 
 @Composable
@@ -817,17 +846,17 @@ fun RestScreen(vm: viewModel) {
 
 
         Column() {
-            Text("Exercise name: ${exercise.name}",color = MaterialTheme.colors.onBackground )
-            Text("Exercise Description: ${exercise.description}",color = MaterialTheme.colors.onBackground )
-            Text("Exercise Steps: ${exercise.steps}",color = MaterialTheme.colors.onBackground )
-            Text("Exercise Sets: ${exercise.sets}",color = MaterialTheme.colors.onBackground )
-            Text("Exercise Rest: ${exercise.rest}",color = MaterialTheme.colors.onBackground )
-            if (exercise.isTimed) {
-                Text("Exercise Time: ${exercise.time}",color = MaterialTheme.colors.onBackground )
-            } else {
-                Text("Exercise Reps: ${exercise.reps}",color = MaterialTheme.colors.onBackground )
-            }
+            KeyValueRow("Exercise", exercise.name)
+            KeyValueRow("Exercise Description", exercise.description)
+            KeyValueRow("Exercise Steps", exercise.steps)
+            KeyValueRow("Exercise Sets", exercise.sets)
+            KeyValueRow("Exercise Rest", exercise.rest)
 
+            if (exercise.isTimed) {
+                KeyValueRow("Exercise Time", exercise.time)
+            } else {
+                KeyValueRow("Exercise Reps", exercise.reps.toString())
+            }
         }
     }
 
@@ -853,14 +882,13 @@ fun RestScreen(vm: viewModel) {
             }
         })
 
-        Column {
-            Text("Routine name: ${routine.name}",color = MaterialTheme.colors.onBackground )
-            Text("Description: ${routine.description}",color = MaterialTheme.colors.onBackground )
+        Column(modifier=Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+            KeyValueRow("Routine",routine.name)
+            KeyValueRow("Description",routine.description)
             for (ex in exercises) {
                 ExerciseViewForRoutineView(ex, vm)
             }
             Button(onClick = {
-
                 vm.changeCurrentRoutine(routine)
                 vm.changeNavigationString("start routine")
                 Log.d("exercise","${vm.getCurrentRoutine()}, ${vm.getNavigationString()}")
