@@ -337,18 +337,23 @@ fun EditRoutine(vm: viewModel){
 fun RestCoroutineWorker(vm:viewModel,exercise: State<Exercise>): Unit {
     vm.incrementSetDoneForExercise(exercise.value)
     Log.d("RestCoroutineWorker","This was the exercise: ${vm.getExercisesThatCanBeDoneToday()[vm.currentExerciseIndex.value]} ")
-    if(vm.getThisExerciseFromETCBDT(exercise.value.name).sets>=exercise.value.setsDone){
+    if(vm.getThisExerciseFromETCBDT(exercise.value.name).setsDone>=exercise.value.sets){
         vm.saveRoutineAndExerciseLastDoneDate(exercise.value)
     }
 
     var DoneCount=0
-    while(vm.exercisesThatCanBeDoneToday.value[vm.currentExerciseIndex.value].setsDone>=vm.exercisesThatCanBeDoneToday.value[vm.currentExerciseIndex.value].sets && DoneCount<vm.getExercisesThatCanBeDoneToday().size-1){
+    while(true){
         if (vm.currentExerciseIndex.value >= vm.exercisesThatCanBeDoneToday.value.size - 1) {
             vm.currentExerciseIndex.value = 0
         } else {
             vm.incrementExerciseIndex()
         }
-        DoneCount++
+        if(vm.exercisesThatCanBeDoneToday.value[vm.currentExerciseIndex.value].setsDone>=vm.exercisesThatCanBeDoneToday.value[vm.currentExerciseIndex.value].sets && DoneCount<vm.getExercisesThatCanBeDoneToday().size-1){
+            DoneCount++
+        }
+        else{
+            break
+        }
     }
 
     Log.d("RestCoroutineWorker","This is the next exercise: ${vm.getExercisesThatCanBeDoneToday()[vm.currentExerciseIndex.value]} ")
@@ -510,7 +515,7 @@ fun RestScreen(vm: viewModel) {
                 KeyValueRow(key = "Exercise Steps", value = currentExercise.steps)
                 KeyValueRow(
                     key = "Sets done",
-                    value = currentExercise.setsDone / currentExercise.sets
+                    value = "${currentExercise.setsDone} / ${currentExercise.sets}"
                 )
                 KeyValueRow(key = "Exercise Rest", value = currentExercise.rest)
                 if (currentExercise.isTimed) {
@@ -546,7 +551,7 @@ fun RestScreen(vm: viewModel) {
                 var exercises = vm.getCurrentRoutineExercises()
                 var exercisesThatCanBeDoneToday: MutableList<Exercise> = mutableListOf()
                 val lastCategory=currentRoutine.lastDoneCategory
-                val restDurationUnit=86_400_000L // 86_400_000L milliseconds = 1 day
+                val restDurationUnit=50L // 86_400_000L milliseconds = 1 day
                 exercises = exercises.sortedBy { it.category }
                 Log.d("RoutineStarter", "This is the routine exercises: ${exercises}")
                 if (lastCategory == null || currentRoutine.forceRun ) {
