@@ -71,6 +71,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import java.util.Calendar
 import java.util.Date
 
 class MainActivity : AppCompatActivity() {
@@ -563,6 +564,25 @@ fun RestScreen(vm: viewModel) {
 
                     return@checker
                 }
+
+                //extract date of latest exercise done in last category
+                val lastRoutineDate = exercises.filter { it.category == lastCategory }.sortedByDescending { it.lastDoneDate }[0].lastDoneDate
+                Log.d("RoutineStarter", "This is the last routine date: ${lastRoutineDate}")
+
+                fun areSameDay(date1: Date, date2: Date): Boolean {
+                    val cal1 = Calendar.getInstance().apply { time = date1 }
+                    val cal2 = Calendar.getInstance().apply { time = date2 }
+                    return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
+                            cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR)
+                }
+
+                // check if last routine exercise was done today and go back to home if yes
+                if( areSameDay(lastRoutineDate, Date()) ){
+                    Log.d("RoutineStarter", "This is the last routine date: ${lastRoutineDate} and today is ${Date()}.So both are same. Thus can't allow different category exercises to be done at the same day.")
+                    vm.changeNavigationString("home")
+                    return@checker
+                }
+
                 //remove all those exercises with last frequency less than the routine last frequency and also remove those exercises whose frequency if you add with last routine date it is after today
                 //Log.d("RoutineStarter", "Get current routine: ${currentRoutine}")
                 val maxCategory=exercises.maxBy { it.category!! }.category
