@@ -551,7 +551,7 @@ fun RestScreen(vm: viewModel) {
                 var exercises = vm.getCurrentRoutineExercises()
                 var exercisesThatCanBeDoneToday: MutableList<Exercise> = mutableListOf()
                 val lastCategory=currentRoutine.lastDoneCategory
-                val restDurationUnit=50L // 86_400_000L milliseconds = 1 day
+                val restDurationUnit=86_400_000L // 86_400_000L milliseconds = 1 day
                 exercises = exercises.sortedBy { it.category }
                 Log.d("RoutineStarter", "This is the routine exercises: ${exercises}")
                 if (lastCategory == null || currentRoutine.forceRun ) {
