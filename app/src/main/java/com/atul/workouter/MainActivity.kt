@@ -1,11 +1,13 @@
 package com.atul.workouter
 
 
+import android.app.Activity
 import android.graphics.Paint.Align
 import android.health.connect.datatypes.units.Percentage
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.util.Log
+import android.view.WindowManager
 import androidx.compose.ui.unit.sp
 import android.view.autofill.AutofillManager
 import androidx.activity.compose.BackHandler
@@ -71,6 +73,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import com.atul.workouter.ui.Boxer
 import java.util.Calendar
 import java.util.Date
 
@@ -357,6 +360,7 @@ fun RestCoroutineWorker(vm:viewModel,exercise: State<Exercise>): Unit {
         }
     }
 
+
     Log.d("RestCoroutineWorker","This is the next exercise: ${vm.getExercisesThatCanBeDoneToday()[vm.currentExerciseIndex.value]} ")
 
     var isRoutineDone=true
@@ -505,6 +509,7 @@ fun RestScreen(vm: viewModel) {
             vm.changeNavigationString("home")
             return
         }
+        (LocalContext.current as Activity).window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         val exercises = vm.getExercisesThatCanBeDoneToday()
         val currentExerciseIndex = vm.currentExerciseIndex
         val currentExercise = exercises[currentExerciseIndex.value]
@@ -631,46 +636,62 @@ fun RestScreen(vm: viewModel) {
 
     @Composable
     fun WorkoutApp(vm: viewModel) {
-        Column(
-            modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center
-        ) {
-            ClickableText(modifier = Modifier.padding(20.dp),
-                text=buildAnnotatedString {
-                    val text="Create routine"
-                    append(text)
-                    addStyle(
-                        style = SpanStyle(color = MaterialTheme.colors.onBackground),
-                        start = 0,
-                        end = text.length
-                    )
-                                          },
-                style = TextStyle(fontSize = 30.sp),
-                onClick = { vm.changeNavigationString("create routine") })
-            ClickableText(modifier = Modifier.padding(20.dp),
-                text=buildAnnotatedString {
-                    val text="View routines"
-                    append(text)
-                    addStyle(
-                        style = SpanStyle(color = MaterialTheme.colors.onBackground),
-                        start = 0,
-                        end = text.length
-                    )
-                                          },
-                style = TextStyle(fontSize = 30.sp),
-                onClick = { vm.changeNavigationString("see all routines") })
-            ClickableText(modifier = Modifier.padding(20.dp),
-                text=buildAnnotatedString {
-                    val text="Delete routines"
-                    append(text)
-                    addStyle(
-                        style = SpanStyle(color = MaterialTheme.colors.onBackground),
-                        start = 0,
-                        end = text.length
-                    )
-                                          },
-                style = TextStyle(fontSize = 30.sp),
-                onClick = { vm.changeNavigationString("delete all routines") })
+
+        if((LocalContext.current as Activity).window.attributes.flags.and(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)!=0){
+            (LocalContext.current as Activity).window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
+
+
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(LocalConfiguration.current.screenHeightDp.dp/25,
+                    Alignment.CenterVertically
+                ),
+            ) {
+                Boxer {
+                    ClickableText(modifier = Modifier.padding(LocalConfiguration.current.screenHeightDp.dp / 60),
+                        text = buildAnnotatedString {
+                            val text = "Create routine"
+                            append(text)
+                            addStyle(
+                                style = SpanStyle(color = MaterialTheme.colors.onBackground),
+                                start = 0,
+                                end = text.length
+                            )
+                        },
+                        style = TextStyle(fontSize = 30.sp),
+                        onClick = { vm.changeNavigationString("create routine") })
+                }
+                Boxer {
+                    ClickableText(modifier = Modifier.padding(LocalConfiguration.current.screenHeightDp.dp / 50),
+                        text = buildAnnotatedString {
+                            val text = "View routines"
+                            append(text)
+                            addStyle(
+                                style = SpanStyle(color = MaterialTheme.colors.onBackground),
+                                start = 0,
+                                end = text.length
+                            )
+                        },
+                        style = TextStyle(fontSize = 30.sp),
+                        onClick = { vm.changeNavigationString("see all routines") })
+                }
+                Boxer {
+                    ClickableText(modifier = Modifier.padding(LocalConfiguration.current.screenHeightDp.dp / 50),
+                        text = buildAnnotatedString {
+                            val text = "Delete routines"
+                            append(text)
+                            addStyle(
+                                style = SpanStyle(color = MaterialTheme.colors.onBackground),
+                                start = 0,
+                                end = text.length
+                            )
+                        },
+                        style = TextStyle(fontSize = 30.sp),
+                        onClick = { vm.changeNavigationString("delete all routines") })
+                }
+            }
     }
 
     @Composable
