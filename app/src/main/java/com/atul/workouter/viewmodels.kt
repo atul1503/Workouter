@@ -24,6 +24,8 @@ class viewModel: ViewModel() {
     var EditRoutine= Routine()
     var EditExercises= listOf<MutableStateExercise>()
 
+    var NearestNextRoutineExercise: Exercise?=null
+
 
     var tts : TextToSpeech?=null
     var ctx: Context?=null

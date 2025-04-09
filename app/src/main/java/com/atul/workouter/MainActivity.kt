@@ -52,28 +52,25 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.DrawStyle
-import androidx.compose.ui.graphics.drawscope.clipPath
-import androidx.compose.ui.layout.AlignmentLine
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import com.atul.workouter.ui.Boxer
+import kotlinx.coroutines.delay
 import java.util.Calendar
 import java.util.Date
 
@@ -127,6 +124,7 @@ class MainActivity : AppCompatActivity() {
 
 @Composable
 fun Navigator(vm: viewModel) {
+    Log.d("Navigator",vm.getNavigationString())
     val value = vm.getNavigationString()
     val db= vm.getAppDatabase()
     when (value) {
@@ -145,6 +143,9 @@ fun Navigator(vm: viewModel) {
         "edit routine" -> {
             EditRoutine(vm = vm)
         }
+        "how much time left?" -> {
+            WaitDialog(vm = vm)
+        }
         "get rest" -> {
             RestScreen(vm)
         }
@@ -162,6 +163,52 @@ fun Navigator(vm: viewModel) {
 }
 
 
+
+@Composable
+fun WaitDialog(vm: viewModel) {
+
+    val currentTime= remember {
+        mutableStateOf(System.currentTimeMillis())
+    }
+
+
+    var leftTime=((vm.NearestNextRoutineExercise!!.lastDoneDate.time+vm.NearestNextRoutineExercise!!.restTime*86_400_000L)-currentTime.value)/1000
+
+    val seconds=leftTime % 60
+    leftTime /= 60
+
+    var minutes=leftTime % 60
+    leftTime /= 60
+
+    var hours=leftTime % 24
+    leftTime /= 24
+
+    LaunchedEffect(key1 = Unit, block = {
+        while (true) {
+            delay(1000)
+            currentTime.value = System.currentTimeMillis()
+            Log.d("timer","is running")
+        }
+    })
+    BackHandler() {
+        vm.changeNavigationString("home")
+    }
+
+    Row(modifier = Modifier.fillMaxHeight(), verticalAlignment = Alignment.CenterVertically,) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            KeyValueRow(key = "Time left for routine: ", value = "$hours hours, $minutes minutes and $seconds seconds")
+
+            Button(onClick = {
+                vm.changeNavigationString("home")
+            }) {
+                Text("Close")
+            }
+        }
+    }
+}
 
 
 @Composable
@@ -385,6 +432,7 @@ fun RestCoroutineWorker(vm:viewModel,exercise: State<Exercise>): Unit {
 fun RestScreen(vm: viewModel) {
     if(vm.currentExerciseIndex.value>=vm.getExercisesThatCanBeDoneToday().size){
         vm.changeNavigationString("home")
+        Log.d("RestScreen","No exercise to be done")
         return
     }
     val exercise= rememberUpdatedState(newValue =vm.getExercisesThatCanBeDoneToday()[vm.currentExerciseIndex.value])
@@ -570,36 +618,17 @@ fun RestScreen(vm: viewModel) {
                     return@checker
                 }
 
-                //extract date of latest exercise done in last category
-                val lastRoutineDate = exercises.filter { it.category == lastCategory }.sortedByDescending { it.lastDoneDate }[0].lastDoneDate
-                Log.d("RoutineStarter", "This is the last routine date: ${lastRoutineDate}")
-
-                fun areSameDay(date1: Date, date2: Date): Boolean {
-                    val cal1 = Calendar.getInstance().apply { time = date1 }
-                    val cal2 = Calendar.getInstance().apply { time = date2 }
-                    return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
-                            cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR)
-                }
-
-                // check if last routine exercise was done today and go back to home if yes
-                if( areSameDay(lastRoutineDate, Date()) ){
-                    Log.d("RoutineStarter", "This is the last routine date: ${lastRoutineDate} and today is ${Date()}.So both are same. Thus can't allow different category exercises to be done at the same day.")
-                    vm.changeNavigationString("home")
-                    return@checker
-                }
 
                 //remove all those exercises with last frequency less than the routine last frequency and also remove those exercises whose frequency if you add with last routine date it is after today
                 //Log.d("RoutineStarter", "Get current routine: ${currentRoutine}")
                 val maxCategory=exercises.maxBy { it.category!! }.category
                 exercisesThatCanBeDoneToday=(exercises.filter {
-                    if(it.category==lastCategory){
-                        return@filter false
-                    }
                     return@filter true
                 }).toMutableList()
+                var nextCategory: Int?=null
                 if(maxCategory!!>lastCategory){
                     //find just higher category
-                    var nextCategory: Int?=null
+                    nextCategory=null
                     for(ex in exercises){
                         if(ex.category!!>lastCategory){
                             nextCategory=ex.category
@@ -611,10 +640,10 @@ fun RestScreen(vm: viewModel) {
                 else if(lastCategory==maxCategory){
                     val firstCategory=exercises[0].category
                     exercisesThatCanBeDoneToday= exercises.filter { it.category==firstCategory }.toMutableList()
+                    nextCategory=firstCategory!!
                 }
                 else{
                     //find just higher category
-                    var nextCategory: Int?=null
                     for(ex in exercises){
                         if(ex.category!!>lastCategory){
                             nextCategory=ex.category
@@ -627,6 +656,13 @@ fun RestScreen(vm: viewModel) {
                 exercisesThatCanBeDoneToday=exercisesThatCanBeDoneToday.filter { System.currentTimeMillis()-it.lastDoneDate.time >= it.restTime*restDurationUnit }.toMutableList()
 
                 Log.d("RoutineStarter", "These are the exercises that can be done today: ${exercisesThatCanBeDoneToday}")
+                Log.d("RoutineStarter",exercisesThatCanBeDoneToday.isEmpty().toString())
+
+                if(exercisesThatCanBeDoneToday.isEmpty()){
+                    vm.NearestNextRoutineExercise=exercises.filter { it.category==lastCategory }.sortedByDescending { it.lastDoneDate }[0]
+                    vm.changeNavigationString("how much time left?")
+                    return@checker
+                }
 
                 vm.changeExercisesThatCanBeDoneToday(exercisesThatCanBeDoneToday)
                 vm.changeNavigationString("start exercises")
