@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.util.Date
 
@@ -30,6 +31,18 @@ class viewModel: ViewModel() {
     var tts : TextToSpeech?=null
     var ctx: Context?=null
 
+
+
+    fun deleteRoutine(name: String){
+        val scope=CoroutineScope(Dispatchers.IO)
+
+        scope.launch {
+            db!!.routineDao().deleteRoutine(name);
+                scope.cancel()
+        }
+
+
+    }
 
 
     fun getTextToSpeech(): TextToSpeech {

@@ -149,16 +149,6 @@ fun Navigator(vm: viewModel) {
         "get rest" -> {
             RestScreen(vm)
         }
-        "delete all routines" -> {
-            val scope = CoroutineScope(Dispatchers.IO)
-            LaunchedEffect(key1 = Unit, block = {
-                scope.launch {
-                    db.routineDao().deleteAll()
-                    db.exerciseDao().deleteAll()
-                    vm.changeNavigationString("home")
-                }
-            })
-        }
     }
 }
 
@@ -183,6 +173,8 @@ fun WaitDialog(vm: viewModel) {
     var hours=leftTime % 24
     leftTime /= 24
 
+    var days=leftTime
+
     LaunchedEffect(key1 = Unit, block = {
         while (true) {
             delay(1000)
@@ -199,7 +191,7 @@ fun WaitDialog(vm: viewModel) {
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            KeyValueRow(key = "Time left for routine: ", value = "$hours hours, $minutes minutes and $seconds seconds")
+            KeyValueRow(key = "Time left for routine: ", value = "$days days $hours hours, $minutes minutes and $seconds seconds")
 
             Button(onClick = {
                 vm.changeNavigationString("home")
@@ -310,7 +302,7 @@ fun EditRoutine(vm: viewModel){
                         },
                         label = {
                             Text(
-                                "Enter rest in days. These many days will be skipped before this exercise is scheduled again.",
+                                "Enter rest in days. These many days will be skipped before this exercise is scheduled again. Make sure that exercises in same category have same value for this field. ",
                                 color = MaterialTheme.colors.onBackground
                             )
                         })
@@ -713,20 +705,7 @@ fun RestScreen(vm: viewModel) {
                         style = TextStyle(fontSize = 30.sp),
                         onClick = { vm.changeNavigationString("see all routines") })
                 }
-                Boxer {
-                    ClickableText(modifier = Modifier.padding(LocalConfiguration.current.screenHeightDp.dp / 50),
-                        text = buildAnnotatedString {
-                            val text = "Delete routines"
-                            append(text)
-                            addStyle(
-                                style = SpanStyle(color = MaterialTheme.colors.onBackground),
-                                start = 0,
-                                end = text.length
-                            )
-                        },
-                        style = TextStyle(fontSize = 30.sp),
-                        onClick = { vm.changeNavigationString("delete all routines") })
-                }
+
             }
     }
 
@@ -835,7 +814,7 @@ fun RestScreen(vm: viewModel) {
             TextField(modifier=Modifier.fillMaxWidth(),
                 value = "${restInDays.value}",
                 onValueChange = {if(it=="") return@TextField;  restInDays.value = it.toInt();exercise.restTime = it.toInt() },
-                label = { Text("Enter rest in days. These many days will be skipped before this exercise is scheduled again.",color = MaterialTheme.colors.onBackground ) })
+                label = { Text("Enter rest in days. These many days will be skipped before this exercise is scheduled again.  Make sure that exercises in same category have same value for this field. ",color = MaterialTheme.colors.onBackground ) })
             TextField(modifier=Modifier.fillMaxWidth(),
                 value = "${sets.value}",
                 onValueChange = {
@@ -961,6 +940,16 @@ fun RestScreen(vm: viewModel) {
             }) {
                 Text("Edit routine",color = Color.White )
             }
+
+            Button(onClick = {
+                scope.launch {
+                    vm.deleteRoutine(routine.name)
+                    vm.changeNavigationString("home")
+                }
+            }) {
+                Text("Delete routine",color = Color.White )
+            }
+
             Checkbox(checked = forceRun.value, onCheckedChange = { forceRun.value=it; routine.forceRun = it })
             Text(text = "Force start routine today?",color = MaterialTheme.colors.onBackground )
         }

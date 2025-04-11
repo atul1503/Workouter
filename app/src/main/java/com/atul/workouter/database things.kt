@@ -3,6 +3,7 @@ package com.atul.workouter
 import android.content.Context
 import androidx.room.Dao
 import androidx.room.Database
+import androidx.room.Delete
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.ForeignKey
@@ -140,6 +141,10 @@ interface  RoutineDao {
 
     @Query("SELECT * FROM Routine")
     abstract fun getAllRoutines(): List<Routine>
+
+
+    @Query("DELETE FROM Routine WHERE name= :name")
+    abstract fun deleteRoutine(name: String)
 
     //delete all
     @Query("DELETE FROM Routine")
