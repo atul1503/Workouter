@@ -656,7 +656,7 @@ fun RestScreen(vm: viewModel) {
                 Log.d("RoutineStarter",exercisesThatCanBeDoneToday.isEmpty().toString())
 
                 if(exercisesThatCanBeDoneToday.isEmpty()){
-                    vm.NearestNextRoutineExercise=exercises.filter { it.category==lastCategory }.sortedByDescending { it.lastDoneDate }[0]
+                    vm.NearestNextRoutineExercise=exercises.filter { it.category==nextCategory }.sortedByDescending { it.lastDoneDate }[0]
                     vm.changeNavigationString("how much time left?")
                     return@checker
                 }
