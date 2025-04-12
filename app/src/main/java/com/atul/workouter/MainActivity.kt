@@ -19,7 +19,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,8 +31,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
@@ -57,6 +59,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.text.buildAnnotatedString
@@ -65,6 +68,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
@@ -924,30 +928,42 @@ fun RestScreen(vm: viewModel) {
             for (ex in exercises) {
                 ExerciseViewForRoutineView(ex, vm)
             }
-            Button(onClick = {
-                vm.changeCurrentRoutine(routine)
-                vm.changeNavigationString("start routine")
-                Log.d("exercise","${vm.getCurrentRoutine()}, ${vm.getNavigationString()}")
-            }) {
-                Text("Start routine",color = Color.White )
-            }
-            Button(onClick = {
-                vm.EditRoutine=routine
-                scope.launch {
-                    vm.EditExercises=vm.getExercisesOfRoutine(routine)
+            Row(horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically){
+                Button(onClick = {
+                    vm.changeCurrentRoutine(routine)
+                    vm.changeNavigationString("start routine")
+                    Log.d("exercise", "${vm.getCurrentRoutine()}, ${vm.getNavigationString()}")
+                }) {
+                    Text("Start routine", color = Color.White)
                 }
-                vm.changeNavigationString("edit routine")
-            }) {
-                Text("Edit routine",color = Color.White )
-            }
-
-            Button(onClick = {
-                scope.launch {
-                    vm.deleteRoutine(routine.name)
-                    vm.changeNavigationString("home")
+                Button(onClick = {
+                    vm.EditRoutine = routine
+                    scope.launch {
+                        vm.EditExercises = vm.getExercisesOfRoutine(routine)
+                    }
+                    vm.changeNavigationString("edit routine")
+                }) {
+                    Text("Edit routine", color = Color.White)
                 }
-            }) {
-                Text("Delete routine",color = Color.White )
+                val screenwidth = LocalConfiguration.current.screenWidthDp
+                val screenheight = LocalConfiguration.current.screenHeightDp
+                Box(
+                    modifier = Modifier.width((screenwidth * 0.3f).dp)
+                        .clip(RoundedCornerShape((screenwidth * 0.02).dp))
+                        .background(color = MaterialTheme.colors.primary).pointerInput(Unit) {
+                        detectTapGestures(onLongPress = {
+                            scope.launch {
+                                vm.deleteRoutine(routine.name)
+                                vm.changeNavigationString("home")
+                            }
+                        })
+                    }) {
+                    Text(
+                        text = "Delete routine",
+                        color = Color.White,
+                        modifier = Modifier.padding(screenwidth.dp / 65).width((screenwidth.dp / 3))
+                    )
+                }
             }
 
             Checkbox(checked = forceRun.value, onCheckedChange = { forceRun.value=it; routine.forceRun = it })
