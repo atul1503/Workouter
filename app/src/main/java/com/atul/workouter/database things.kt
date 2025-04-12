@@ -79,7 +79,7 @@ data class Exercise(
     var sets: Int=0,
     var rest: Float=30f,
     var steps: List<String> = listOf(""),
-    var restTime: Int=0, //in days
+    var restTime: Float=1f, //in days
     var lastDoneDate: Date= Date(),
     var routineName: String="",
     var category: Int?=null,
@@ -161,7 +161,7 @@ interface  RoutineDao {
 }
 
 
-@Database(entities = [Routine::class, Exercise::class], version = 8)
+@Database(entities = [Routine::class, Exercise::class], version = 9)
 @TypeConverters(ExerciseListConverter::class)
 abstract class AppDatabase: RoomDatabase() {
     abstract fun routineDao(): RoutineDao

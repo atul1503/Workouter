@@ -166,18 +166,19 @@ fun WaitDialog(vm: viewModel) {
     }
 
 
-    var leftTime=((vm.NearestNextRoutineExercise!!.lastDoneDate.time+vm.NearestNextRoutineExercise!!.restTime*86_400_000L)-currentTime.value)/1000
+    var leftTime=((vm.NearestNextRoutineExercise!!.lastDoneDate.time+(vm.NearestNextRoutineExercise!!.restTime*86_400_000L).toLong())-currentTime.value)/1000
+
 
     val seconds=leftTime % 60
     leftTime /= 60
 
-    var minutes=leftTime % 60
+    val minutes=leftTime % 60
     leftTime /= 60
 
-    var hours=leftTime % 24
+    val hours=leftTime % 24
     leftTime /= 24
 
-    var days=leftTime
+    val days=leftTime
 
     LaunchedEffect(key1 = Unit, block = {
         while (true) {
@@ -302,7 +303,7 @@ fun EditRoutine(vm: viewModel){
                         modifier = Modifier.fillMaxWidth(),
                         value = ex.restTime.value.toString(),
                         onValueChange = {
-                            if (it == "") return@TextField; ex.restTime.value = it.toInt();
+                            if (it == "") return@TextField; ex.restTime.value = it.toFloat();
                         },
                         label = {
                             Text(
@@ -793,7 +794,7 @@ fun RestScreen(vm: viewModel) {
         var sets = remember { mutableStateOf(0) }
         var rest = remember { mutableStateOf(0f) }
         var category = remember { mutableStateOf(0) }
-        var restInDays= remember { mutableStateOf(0) }
+        var restInDays= remember { mutableStateOf(0f) }
         val showHints=remember {
             mutableStateOf(false)
         }
@@ -817,7 +818,7 @@ fun RestScreen(vm: viewModel) {
                 label = { Text("Enter exercise steps",color = MaterialTheme.colors.onBackground ) })
             TextField(modifier=Modifier.fillMaxWidth(),
                 value = "${restInDays.value}",
-                onValueChange = {if(it=="") return@TextField;  restInDays.value = it.toInt();exercise.restTime = it.toInt() },
+                onValueChange = {if(it=="") return@TextField;  restInDays.value = it.toFloat();exercise.restTime = it.toFloat() },
                 label = { Text("Enter rest in days. These many days will be skipped before this exercise is scheduled again.  Make sure that exercises in same category have same value for this field. ",color = MaterialTheme.colors.onBackground ) })
             TextField(modifier=Modifier.fillMaxWidth(),
                 value = "${sets.value}",
