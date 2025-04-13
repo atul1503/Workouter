@@ -66,6 +66,13 @@ class NotificationWorker(private val context: Context,params: WorkerParameters):
 
             for (routine in routines) {
                 val lastCategory = routine.lastDoneCategory
+                if(lastCategory==null) {
+                    sendNotification(
+                        "Workout Reminder",
+                        "${routine.name} routine is ready to be done!"
+                    )
+                    continue
+                }
                 var exercises = routineDao.getRoutineWithExercises(routine.name)[0].exercises
                 val nextCategory = getNextCategory(routine, exercises, lastCategory!!)
                 exercises = exercises.filter { it.category == nextCategory }
