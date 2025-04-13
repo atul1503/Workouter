@@ -16,7 +16,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
+import androidx.work.WorkManager
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -73,17 +73,45 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkInfo
+import androidx.work.WorkQuery
 import com.atul.workouter.ui.Boxer
 import kotlinx.coroutines.delay
-import java.util.Calendar
 import java.util.Date
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
+
+
+    private fun scheduleNotificationWorker(){
+
+        val constraints= Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
+            .build()
+
+        val workerRequest= PeriodicWorkRequestBuilder<NotificationWorker>(
+            15, TimeUnit.MINUTES,
+            5, TimeUnit.MINUTES
+        )
+            .setConstraints(constraints)
+            .addTag("RoutineNotificationWorkerTag")
+            .build()
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork("RoutineNotificationWorker",ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,workerRequest)
+    }
+
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+
+        scheduleNotificationWorker()
 
         val viewmodel= viewModel()
         val db= DatabaseProvider.getDatabase(this)
