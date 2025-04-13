@@ -38,7 +38,9 @@ class NotificationWorker(private val context: Context,params: WorkerParameters):
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .build()
 
-        notificationManager.notify(1,notification)
+        val notificationId=System.currentTimeMillis().toInt()
+
+        notificationManager.notify(notificationId.hashCode(),notification)
     }
 
 
