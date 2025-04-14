@@ -633,7 +633,7 @@ fun RestScreen(vm: viewModel) {
                 val restDurationUnit=86_400_000L // 86_400_000L milliseconds = 1 day
                 exercises = exercises.sortedBy { it.category }
                 Log.d("RoutineStarter", "This is the routine exercises: ${exercises}")
-                if (lastCategory == null || currentRoutine.forceRun ) {
+                if (lastCategory == null  ) {
                     //filter out exercises which have frequency more than the lowest freuqnecy exercise
                     val lowestCategory = exercises[0].category
                     exercisesThatCanBeDoneToday.addAll(exercises.filter { it.category == lowestCategory })
@@ -676,6 +676,11 @@ fun RestScreen(vm: viewModel) {
                         }
                     }
                     exercisesThatCanBeDoneToday= exercisesThatCanBeDoneToday.filter { it.category==nextCategory }.toMutableList()
+                }
+                if(currentRoutine.forceRun) {
+                    vm.changeExercisesThatCanBeDoneToday(exercisesThatCanBeDoneToday)
+                    vm.changeNavigationString("start exercises")
+                    return@checker
                 }
 
                 exercisesThatCanBeDoneToday=exercisesThatCanBeDoneToday.filter { System.currentTimeMillis()-it.lastDoneDate.time >= it.restTime*restDurationUnit }.toMutableList()
