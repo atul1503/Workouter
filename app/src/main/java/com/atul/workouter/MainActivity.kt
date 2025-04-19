@@ -3,6 +3,7 @@ package com.atul.workouter
 
 import android.app.Activity
 import android.graphics.Paint.Align
+import android.graphics.drawable.Icon
 import android.health.connect.datatypes.units.Percentage
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
@@ -25,6 +26,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -40,15 +42,23 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.Checkbox
 import androidx.compose.material.Colors
+import androidx.compose.material.DropdownMenu
+import androidx.compose.material.DropdownMenuItem
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Shapes
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
+import androidx.compose.material.TopAppBar
 import androidx.compose.material.Typography
 import androidx.compose.material.darkColors
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateListOf
@@ -94,7 +104,7 @@ class MainActivity : AppCompatActivity() {
             .build()
 
         val workerRequest= PeriodicWorkRequestBuilder<NotificationWorker>(
-            15, TimeUnit.MINUTES,
+            30, TimeUnit.MINUTES,
             5, TimeUnit.MINUTES
         )
             .setConstraints(constraints)
@@ -131,7 +141,7 @@ class MainActivity : AppCompatActivity() {
                     primary = Color(0xFF4DB6AC),
                     secondary = Color(0xFFFFF176),
                     background = Color(0xFF1B1B1B),
-                    onPrimary = Color.Black,
+                    onPrimary = Color.White,
                 )
             }
             else{
@@ -139,7 +149,7 @@ class MainActivity : AppCompatActivity() {
                     primary = Color(0xFF00897B) ,
                     secondary = Color(0xFFFFD54F) ,
                     background = Color(0xFFF9FBE7) ,
-                    onPrimary = Color.White,
+                    onPrimary = Color.Black,
                 )
             }
 
@@ -156,9 +166,12 @@ class MainActivity : AppCompatActivity() {
 
 @Composable
 fun Navigator(vm: viewModel) {
-    Log.d("Navigator",vm.getNavigationString())
+    //Log.d("Navigator",vm.getNavigationString())
     val value = vm.getNavigationString()
     val db= vm.getAppDatabase()
+
+
+
     when (value) {
         "home" -> WorkoutApp(vm)
         "create routine" -> CreateRoutine( vm)
@@ -180,6 +193,9 @@ fun Navigator(vm: viewModel) {
         }
         "get rest" -> {
             RestScreen(vm)
+        }
+        "faqs" -> {
+            FaqPage(vm)
         }
     }
 }
@@ -707,6 +723,29 @@ fun RestScreen(vm: viewModel) {
             (LocalContext.current as Activity).window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
 
+        val expanded= remember() {
+            mutableStateOf(false)
+        }
+
+
+        TopAppBar() {
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
+                IconButton(onClick = { expanded.value = true }) {
+                    Icon(Icons.Default.MoreVert, contentDescription = "Info")
+                    DropdownMenu(
+                        expanded = expanded.value,
+                        onDismissRequest = { expanded.value = false }) {
+                        DropdownMenuItem(onClick = {
+                            vm.changeNavigationString("faqs")
+                        }) {
+                            Text(text = "FAQs")
+                        }
+                    }
+                }
+            }
+        }
+
+
 
             Column(
                 modifier = Modifier.fillMaxSize(),
@@ -982,20 +1021,24 @@ fun RestScreen(vm: viewModel) {
                 val screenwidth = LocalConfiguration.current.screenWidthDp
                 val screenheight = LocalConfiguration.current.screenHeightDp
                 Box(
-                    modifier = Modifier.width((screenwidth * 0.3f).dp)
+                    modifier = Modifier
+                        .width((screenwidth * 0.3f).dp)
                         .clip(RoundedCornerShape((screenwidth * 0.02).dp))
-                        .background(color = MaterialTheme.colors.primary).pointerInput(Unit) {
-                        detectTapGestures(onLongPress = {
-                            scope.launch {
-                                vm.deleteRoutine(routine.name)
-                                vm.changeNavigationString("home")
-                            }
-                        })
-                    }) {
+                        .background(color = MaterialTheme.colors.primary)
+                        .pointerInput(Unit) {
+                            detectTapGestures(onLongPress = {
+                                scope.launch {
+                                    vm.deleteRoutine(routine.name)
+                                    vm.changeNavigationString("home")
+                                }
+                            })
+                        }) {
                     Text(
                         text = "Delete routine",
                         color = Color.White,
-                        modifier = Modifier.padding(screenwidth.dp / 65).width((screenwidth.dp / 3))
+                        modifier = Modifier
+                            .padding(screenwidth.dp / 65)
+                            .width((screenwidth.dp / 3))
                     )
                 }
             }
