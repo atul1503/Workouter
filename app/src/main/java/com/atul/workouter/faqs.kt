@@ -22,7 +22,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 
 @Composable
@@ -60,12 +63,13 @@ fun FaqPage(vm: viewModel) {
                 )
                 .padding(all = (screenwidth * 0.06).dp)
             ) {
-                Column() {
+                Column(verticalArrangement = Arrangement.spacedBy((screenwidth*0.07).dp)) {
 
                     Text(
                         "Q. What is this app for?",
-                        color = MaterialTheme.colors.onPrimary,
-                        fontWeight = MaterialTheme.typography.h6.fontWeight
+                        color = MaterialTheme.colors.primary,
+                        fontWeight = MaterialTheme.typography.h6.fontWeight,
+                        style = TextStyle(fontSize = (screenwidth*0.06).sp)
                     )
                     Text(
                         text = """A. This app is for tracking your workouts and routines. This can be used either for working out or creating study routines or any routine of any kind.
@@ -74,8 +78,9 @@ fun FaqPage(vm: viewModel) {
                 So, every day it will remind you to study that subject for 1 hr. So, here set is how many times you want to study the subject for the current run of the routine and since you want to 
                 numerify it using time and not a number of repetitions, you can set the exercise as timed.
                 """.trimIndent(),
-                        color = MaterialTheme.colors.onPrimary,
-                        fontWeight = MaterialTheme.typography.h3.fontWeight
+                        color = MaterialTheme.colors.secondary,
+                        fontWeight = MaterialTheme.typography.h3.fontWeight,
+                        style = TextStyle(fontSize = (screenwidth*0.04).sp)
                     )
                 }
 
@@ -98,18 +103,20 @@ fun FaqPage(vm: viewModel) {
             .padding(all = (screenwidth * 0.05).dp)
         ) {
 
-            Column() {
+            Column(verticalArrangement = Arrangement.spacedBy((screenwidth*0.07).dp)) {
                 Text(
                     "Q. How are routines and exercises related?",
-                    color = MaterialTheme.colors.onPrimary,
-                    fontWeight = MaterialTheme.typography.h6.fontWeight
+                    color = MaterialTheme.colors.primary,
+                    fontWeight = MaterialTheme.typography.h6.fontWeight,
+                    style = TextStyle(fontSize = (screenwidth*0.06).sp)
                 )
                 Text(
                     text = """
                 A. Routines are a collection of exercises. You can create a routine and add exercises to it. You have to add all exercises while creating a routine. You can edit the exercises but not the routine later, which means that exercises can't be added or removed once added to the routine.
                 """.trimIndent(),
-                    color = MaterialTheme.colors.onPrimary,
-                    fontWeight = MaterialTheme.typography.h3.fontWeight
+                    color = MaterialTheme.colors.secondary,
+                    fontWeight = MaterialTheme.typography.h3.fontWeight,
+                    style = TextStyle(fontSize = (screenwidth*0.04).sp)
                 )
             }
         }
@@ -132,12 +139,13 @@ fun FaqPage(vm: viewModel) {
             .padding(all = (screenwidth * 0.06).dp)
         ) {
 
-            Column() {
+            Column(verticalArrangement = Arrangement.spacedBy((screenwidth*0.07).dp)) {
 
                 Text(
                     "Q. How to create a routine?",
-                    color = MaterialTheme.colors.onPrimary,
-                    fontWeight = MaterialTheme.typography.h6.fontWeight
+                    color = MaterialTheme.colors.primary,
+                    fontWeight = MaterialTheme.typography.h6.fontWeight,
+                    style = TextStyle(fontSize = (screenwidth*0.06).sp)
                 )
                 Text(
                     text = """A. You can create a routine by clicking on the 'Create Routine' button in the home screen. You will be asked to enter the name of the routine and then you can add exercises to it.
@@ -153,8 +161,9 @@ fun FaqPage(vm: viewModel) {
                 name: name of the routine, should be unique throughout the app and across all routines.
                 description: description of the routine, just a few words about the routine like, what does it accomplish. Optional
                 """.trimIndent(),
-                    color = MaterialTheme.colors.onPrimary,
-                    fontWeight = MaterialTheme.typography.h3.fontWeight
+                    color = MaterialTheme.colors.secondary,
+                    fontWeight = MaterialTheme.typography.h3.fontWeight,
+                    style = TextStyle(fontSize = (screenwidth*0.04).sp)
                 )
             }
         }
@@ -175,12 +184,13 @@ fun FaqPage(vm: viewModel) {
             )
             .padding(all = (screenwidth * 0.06).dp)
         ) {
-            Column() {
+            Column(verticalArrangement = Arrangement.spacedBy((screenwidth*0.07).dp)) {
 
                 Text(
                     "Q. What is a category?",
-                    color = MaterialTheme.colors.onPrimary,
-                    fontWeight = MaterialTheme.typography.h6.fontWeight
+                    color = MaterialTheme.colors.primary,
+                    fontWeight = MaterialTheme.typography.h6.fontWeight,
+                    style = TextStyle(fontSize = (screenwidth*0.06).sp)
                 )
                 Text(
                     text = """
@@ -190,8 +200,9 @@ fun FaqPage(vm: viewModel) {
             so that there is a rest gap between these two exercises.
             
         """.trimIndent(),
-                    color = MaterialTheme.colors.onPrimary,
-                    fontWeight = MaterialTheme.typography.h6.fontWeight
+                    color = MaterialTheme.colors.secondary,
+                    fontWeight = MaterialTheme.typography.h6.fontWeight,
+                    style = TextStyle(fontSize = (screenwidth*0.04).sp)
                 )
             }
         }
@@ -212,13 +223,14 @@ fun FaqPage(vm: viewModel) {
             )
             .padding(all = (screenwidth * 0.06).dp)
         ) {
-            Column() {
+            Column(verticalArrangement = Arrangement.spacedBy((screenwidth*0.07).dp)) {
 
 
                 Text(
                     "Q. How much rest in days to put for any exercise?",
-                    color = MaterialTheme.colors.onPrimary,
-                    fontWeight = MaterialTheme.typography.h6.fontWeight
+                    color = MaterialTheme.colors.primary,
+                    fontWeight = MaterialTheme.typography.h6.fontWeight,
+                    style = TextStyle(fontSize = (screenwidth*0.06).sp)
                 )
                 Text(
                     """
@@ -229,8 +241,9 @@ fun FaqPage(vm: viewModel) {
             
             But remember EXERCISES have rest in days NOT category or routines.
             """.trimIndent(),
-                    color = MaterialTheme.colors.onPrimary,
-                    fontWeight = MaterialTheme.typography.h6.fontWeight
+                    color = MaterialTheme.colors.secondary,
+                    fontWeight = MaterialTheme.typography.h6.fontWeight,
+                    style = TextStyle(fontSize = (screenwidth*0.04).sp)
                 )
             }
         }
@@ -252,11 +265,12 @@ fun FaqPage(vm: viewModel) {
             .padding(all = (screenwidth * 0.06).dp)
         ) {
 
-            Column() {
+            Column(verticalArrangement = Arrangement.spacedBy((screenwidth*0.07).dp)) {
                 Text(
                     "Q. Will putting different categories ensure that different category exercises cannot be done on same day?",
-                    color = MaterialTheme.colors.onPrimary,
-                    fontWeight = MaterialTheme.typography.h6.fontWeight
+                    color = MaterialTheme.colors.primary,
+                    fontWeight = MaterialTheme.typography.h6.fontWeight,
+                    style = TextStyle(fontSize = (screenwidth*0.06).sp)
                 )
 
                 Text(
@@ -268,8 +282,9 @@ fun FaqPage(vm: viewModel) {
             
             So, its very important, that you carefully decide proper rest in days for any category.
         """.trimIndent(),
-                    color = MaterialTheme.colors.onPrimary,
-                    fontWeight = MaterialTheme.typography.h3.fontWeight
+                    color = MaterialTheme.colors.secondary,
+                    fontWeight = MaterialTheme.typography.h3.fontWeight,
+                    style = TextStyle(fontSize = (screenwidth*0.04).sp)
                 )
             }
         }
@@ -290,12 +305,13 @@ fun FaqPage(vm: viewModel) {
             )
             .padding(all = (screenwidth * 0.06).dp)
         ) {
-            Column() {
+            Column(verticalArrangement = Arrangement.spacedBy((screenwidth*0.07).dp)) {
 
                 Text(
                     "Q. Why do categories have integer values?",
-                    color = MaterialTheme.colors.onPrimary,
-                    fontWeight = MaterialTheme.typography.h6.fontWeight
+                    color = MaterialTheme.colors.primary,
+                    fontWeight = MaterialTheme.typography.h6.fontWeight,
+                    style = TextStyle(fontSize = (screenwidth*0.06).sp)
                 )
 
                 Text(
@@ -307,8 +323,9 @@ fun FaqPage(vm: viewModel) {
             
             So, category allows routines to execute itself in batches.
         """.trimIndent(),
-                    color = MaterialTheme.colors.onPrimary,
-                    fontWeight = MaterialTheme.typography.h3.fontWeight
+                    color = MaterialTheme.colors.secondary,
+                    fontWeight = MaterialTheme.typography.h3.fontWeight,
+                    style = TextStyle(fontSize = (screenwidth*0.04).sp)
                 )
             }
         }
@@ -330,20 +347,22 @@ fun FaqPage(vm: viewModel) {
             .padding(all = (screenwidth * 0.06).dp)
         ) {
 
-            Column() {
+            Column(verticalArrangement = Arrangement.spacedBy((screenwidth*0.07).dp)) {
 
                 Text(
                     "Q.Difference between rest in days and rest between sets ",
-                    color = MaterialTheme.colors.onPrimary,
-                    fontWeight = MaterialTheme.typography.h6.fontWeight
+                    color = MaterialTheme.colors.primary,
+                    fontWeight = MaterialTheme.typography.h6.fontWeight,
+                    style = TextStyle(fontSize = (screenwidth*0.06).sp)
                 )
                 Text(
                     """
             A. Both are rests, except that rest between sets is literally the period for which the rest timer in the app runs to allow you to rest yourself and be ready for the next exercise set.
              And rest in days, is the rest for the complete exercise, until its scheduled to be done next.
             """.trimIndent(),
-                    color = MaterialTheme.colors.onPrimary,
-                    fontWeight = MaterialTheme.typography.h3.fontWeight
+                    color = MaterialTheme.colors.secondary,
+                    fontWeight = MaterialTheme.typography.h3.fontWeight,
+                    style = TextStyle(fontSize = (screenwidth*0.04).sp)
                 )
             }
 
