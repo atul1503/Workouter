@@ -58,7 +58,7 @@ fun FaqPage(vm: viewModel) {
                     )
                 )
                 .border(
-                    width = (screenwidth * 0.005).dp,
+                    width = (screenwidth * 0.0005).dp,
                     color = MaterialTheme.colors.primary
                 )
                 .padding(all = (screenwidth * 0.06).dp)
@@ -97,7 +97,7 @@ fun FaqPage(vm: viewModel) {
                 )
             )
             .border(
-                width = (screenwidth * 0.005).dp,
+                width = (screenwidth * 0.0005).dp,
                 color = MaterialTheme.colors.primary
             )
             .padding(all = (screenwidth * 0.05).dp)
@@ -133,7 +133,7 @@ fun FaqPage(vm: viewModel) {
                 )
             )
             .border(
-                width = (screenwidth * 0.005).dp,
+                width = (screenwidth * 0.0005).dp,
                 color = MaterialTheme.colors.primary
             )
             .padding(all = (screenwidth * 0.06).dp)
@@ -179,7 +179,7 @@ fun FaqPage(vm: viewModel) {
                 )
             )
             .border(
-                width = (screenwidth * 0.005).dp,
+                width = (screenwidth * 0.0005).dp,
                 color = MaterialTheme.colors.primary
             )
             .padding(all = (screenwidth * 0.06).dp)
@@ -218,7 +218,7 @@ fun FaqPage(vm: viewModel) {
                 )
             )
             .border(
-                width = (screenwidth * 0.005).dp,
+                width = (screenwidth * 0.0005).dp,
                 color = MaterialTheme.colors.primary
             )
             .padding(all = (screenwidth * 0.06).dp)
@@ -259,7 +259,7 @@ fun FaqPage(vm: viewModel) {
                 )
             )
             .border(
-                width = (screenwidth * 0.005).dp,
+                width = (screenwidth * 0.0005).dp,
                 color = MaterialTheme.colors.primary
             )
             .padding(all = (screenwidth * 0.06).dp)
@@ -300,7 +300,7 @@ fun FaqPage(vm: viewModel) {
                 )
             )
             .border(
-                width = (screenwidth * 0.005).dp,
+                width = (screenwidth * 0.0005).dp,
                 color = MaterialTheme.colors.primary
             )
             .padding(all = (screenwidth * 0.06).dp)
@@ -341,7 +341,7 @@ fun FaqPage(vm: viewModel) {
                 )
             )
             .border(
-                width = (screenwidth * 0.005).dp,
+                width = (screenwidth * 0.0005).dp,
                 color = MaterialTheme.colors.primary
             )
             .padding(all = (screenwidth * 0.06).dp)

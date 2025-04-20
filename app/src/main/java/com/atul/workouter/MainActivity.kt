@@ -333,14 +333,18 @@ fun EditRoutine(vm: viewModel){
                         modifier = Modifier.fillMaxWidth(),
                         value = ex.sets.value.toString(),
                         onValueChange = {
-                            if (it == "") return@TextField; ex.sets.value = it.toInt()
-                        },
-                        label = { Text("Enter number of sets") })
+                            if (it == "") return@TextField;
+                                ex.sets.value=it.toInt()
+                        }
+                            ,label = { Text("Enter number of sets") })
                     TextField(
                         modifier = Modifier.fillMaxWidth(),
                         value = ex.rest.value.toString(),
                         onValueChange = {
-                            if (it == "") return@TextField; ex.rest.value = it.toInt()
+                            if (it == "") return@TextField;
+
+                                ex.rest.value=it.toInt()
+
                         },
                         label = { Text("Enter rest between sets") })
                     TextField(
