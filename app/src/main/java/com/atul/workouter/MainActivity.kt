@@ -20,6 +20,7 @@ import androidx.compose.animation.core.tween
 import androidx.work.WorkManager
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -1224,35 +1225,106 @@ fun RestScreen(vm: viewModel) {
 
     @Composable
     fun ExerciseViewForRoutineView(exercise: Exercise, vm: viewModel) {
-
-            Column() {
-                KeyValueRow("Exercise", exercise.name)
-                KeyValueRow("Exercise Description", exercise.description)
-                KeyValueRow("Exercise Steps", exercise.steps)
-                KeyValueRow("Exercise Sets", exercise.sets)
-                KeyValueRow("Exercise Rest", exercise.rest)
-
+        val screenwidth = LocalConfiguration.current.screenWidthDp
+        
+        Box(modifier = Modifier
+            .width(width = (screenwidth * 0.9).dp)
+            .clip(
+                RoundedCornerShape(
+                    topStart = (screenwidth * 0.0005).dp,
+                    topEnd = (screenwidth * 0.0005).dp,
+                    bottomEnd = (screenwidth * 0.0005).dp,
+                    bottomStart = (screenwidth * 0.0005).dp
+                )
+            )
+            .background(color = MaterialTheme.colors.background)
+            .border(
+                width = (screenwidth * 0.0005).dp,
+                color = MaterialTheme.colors.secondary
+            )
+            .padding(all = (screenwidth * 0.04).dp)
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy((screenwidth * 0.05).dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = exercise.name,
+                        color = MaterialTheme.colors.secondary,
+                        fontWeight = MaterialTheme.typography.h6.fontWeight,
+                        style = TextStyle(fontSize = (screenwidth * 0.05).sp)
+                    )
+                    Text(
+                        text = "Category: ${exercise.category}",
+                        color = MaterialTheme.colors.secondary,
+                        fontWeight = MaterialTheme.typography.body1.fontWeight,
+                        style = TextStyle(fontSize = (screenwidth * 0.035).sp)
+                    )
+                }
+                
+                if (exercise.description.isNotEmpty()) {
+                    Text(
+                        text = exercise.description,
+                        color = MaterialTheme.colors.onBackground,
+                        fontWeight = MaterialTheme.typography.body1.fontWeight,
+                        style = TextStyle(fontSize = (screenwidth * 0.035).sp)
+                    )
+                }
+                
+                if (exercise.steps.isNotEmpty()) {
+                    Text(
+                        text = "Steps:\n${exercise.steps.joinToString("\n")}",
+                        color = MaterialTheme.colors.onBackground,
+                        fontWeight = MaterialTheme.typography.body1.fontWeight,
+                        style = TextStyle(fontSize = (screenwidth * 0.035).sp)
+                    )
+                }
+                
+                Text(
+                    text = "Sets: ${exercise.sets}",
+                    color = MaterialTheme.colors.onBackground,
+                    fontWeight = MaterialTheme.typography.body1.fontWeight,
+                    style = TextStyle(fontSize = (screenwidth * 0.035).sp)
+                )
+                
+                Text(
+                    text = "Rest between sets: ${exercise.rest} seconds",
+                    color = MaterialTheme.colors.onBackground,
+                    fontWeight = MaterialTheme.typography.body1.fontWeight,
+                    style = TextStyle(fontSize = (screenwidth * 0.035).sp)
+                )
+                
                 if (exercise.isTimed) {
-                    KeyValueRow("Exercise Time", exercise.time)
+                    Text(
+                        text = "Time: ${exercise.time} seconds",
+                        color = MaterialTheme.colors.onBackground,
+                        fontWeight = MaterialTheme.typography.body1.fontWeight,
+                        style = TextStyle(fontSize = (screenwidth * 0.035).sp)
+                    )
                 } else {
-                    KeyValueRow("Exercise Reps", exercise.reps.toString())
+                    Text(
+                        text = "Reps: ${exercise.reps}",
+                        color = MaterialTheme.colors.onBackground,
+                        fontWeight = MaterialTheme.typography.body1.fontWeight,
+                        style = TextStyle(fontSize = (screenwidth * 0.035).sp)
+                    )
                 }
             }
+        }
     }
 
     @Composable
     fun RoutineView(routine: Routine, vm: viewModel) {
         var exercises = remember { mutableStateListOf<Exercise>() }
-        val forceRun= remember {
-            mutableStateOf(false)
-        }
-
-        val scope= CoroutineScope(Dispatchers.IO)
+        val forceRun = remember { mutableStateOf(false) }
+        val scope = CoroutineScope(Dispatchers.IO)
+        val screenwidth = LocalConfiguration.current.screenWidthDp
 
         BackHandler() {
             vm.changeNavigationString("home")
         }
-
 
         LaunchedEffect(key1 = routine.name, block = {
             launch(Dispatchers.IO) {
@@ -1262,56 +1334,137 @@ fun RestScreen(vm: viewModel) {
             }
         })
 
-        Column(modifier=Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-            KeyValueRow("Routine",routine.name)
-            KeyValueRow("Description",routine.description)
-            for (ex in exercises) {
-                ExerciseViewForRoutineView(ex, vm)
-            }
-            Row(horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically){
-                Button(onClick = {
-                    vm.changeCurrentRoutine(routine)
-                    vm.changeNavigationString("start routine")
-                    Log.d("exercise", "${vm.getCurrentRoutine()}, ${vm.getNavigationString()}")
-                }) {
-                    Text("Start routine", color = Color.White)
-                }
-                Button(onClick = {
-                    vm.EditRoutine = routine
-                    scope.launch {
-                        vm.EditExercises = vm.getExercisesOfRoutine(routine)
-                    }
-                    vm.changeNavigationString("edit routine")
-                }) {
-                    Text("Edit routine", color = Color.White)
-                }
-                val screenwidth = LocalConfiguration.current.screenWidthDp
-                val screenheight = LocalConfiguration.current.screenHeightDp
-                Box(
-                    modifier = Modifier
-                        .width((screenwidth * 0.3f).dp)
-                        .clip(RoundedCornerShape((screenwidth * 0.02).dp))
-                        .background(color = MaterialTheme.colors.primary)
-                        .pointerInput(Unit) {
-                            detectTapGestures(onLongPress = {
-                                scope.launch {
-                                    vm.deleteRoutine(routine.name)
-                                    vm.changeNavigationString("home")
-                                }
-                            })
-                        }) {
+        Box(modifier = Modifier
+            .width(width = (screenwidth * 0.95).dp)
+            .clip(
+                RoundedCornerShape(
+                    topStart = (screenwidth * 0.0005).dp,
+                    topEnd = (screenwidth * 0.0005).dp,
+                    bottomEnd = (screenwidth * 0.0005).dp,
+                    bottomStart = (screenwidth * 0.0005).dp
+                )
+            )
+            .border(
+                width = (screenwidth * 0.0005).dp,
+                color = MaterialTheme.colors.primary
+            )
+            .padding(all = (screenwidth * 0.06).dp)
+        ) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy((screenwidth * 0.07).dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Routine Info
+                Column(verticalArrangement = Arrangement.spacedBy((screenwidth * 0.07).dp)) {
                     Text(
-                        text = "Delete routine",
-                        color = Color.White,
-                        modifier = Modifier
-                            .padding(screenwidth.dp / 65)
-                            .width((screenwidth.dp / 3))
+                        text = routine.name,
+                        color = MaterialTheme.colors.primary,
+                        fontWeight = MaterialTheme.typography.h6.fontWeight,
+                        style = TextStyle(fontSize = (screenwidth * 0.06).sp)
                     )
+                    
+                    if (routine.description.isNotEmpty()) {
+                        Text(
+                            text = routine.description,
+                            color = MaterialTheme.colors.secondary,
+                            fontWeight = MaterialTheme.typography.h3.fontWeight,
+                            style = TextStyle(fontSize = (screenwidth * 0.04).sp)
+                        )
+                    }
+                }
+
+                // Exercises Section
+                if (exercises.isNotEmpty()) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy((screenwidth * 0.05).dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Exercises",
+                            color = MaterialTheme.colors.primary,
+                            fontWeight = MaterialTheme.typography.h6.fontWeight,
+                            style = TextStyle(fontSize = (screenwidth * 0.05).sp)
+                        )
+                        
+                        for (ex in exercises) {
+                            ExerciseViewForRoutineView(ex, vm)
+                        }
+                    }
+                }
+
+                // Action Buttons
+                Column(
+                    verticalArrangement = Arrangement.spacedBy((screenwidth * 0.07).dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Button(
+                            onClick = {
+                                vm.changeCurrentRoutine(routine)
+                                vm.changeNavigationString("start routine")
+                            },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Start routine", color = Color.White)
+                        }
+                        
+                        Button(
+                            onClick = {
+                                vm.EditRoutine = routine
+                                scope.launch {
+                                    vm.EditExercises = vm.getExercisesOfRoutine(routine)
+                                }
+                                vm.changeNavigationString("edit routine")
+                            },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Edit routine", color = Color.White)
+                        }
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape((screenwidth * 0.02).dp))
+                            .background(color = MaterialTheme.colors.primary)
+                            .pointerInput(Unit) {
+                                detectTapGestures(onLongPress = {
+                                    scope.launch {
+                                        vm.deleteRoutine(routine.name)
+                                        vm.changeNavigationString("home")
+                                    }
+                                })
+                            }
+                    ) {
+                        Text(
+                            text = "Delete routine (Long Press)",
+                            color = Color.White,
+                            modifier = Modifier
+                                .padding(screenwidth.dp / 65)
+                                .align(Alignment.Center)
+                        )
+                    }
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Checkbox(
+                            checked = forceRun.value,
+                            onCheckedChange = { forceRun.value = it; routine.forceRun = it }
+                        )
+                        Text(
+                            text = "Force start routine today?",
+                            color = MaterialTheme.colors.onBackground,
+                            style = TextStyle(fontSize = (screenwidth * 0.04).sp)
+                        )
+                    }
                 }
             }
-
-            Checkbox(checked = forceRun.value, onCheckedChange = { forceRun.value=it; routine.forceRun = it })
-            Text(text = "Force start routine today?",color = MaterialTheme.colors.onBackground )
         }
     }
 
@@ -1327,7 +1480,6 @@ fun RestScreen(vm: viewModel) {
         LaunchedEffect(key1 = Unit, block = {
             scope.launch {
                 routines.value.addAll(db.routineDao().getAllRoutines())
-
             }
         })
 
@@ -1336,7 +1488,13 @@ fun RestScreen(vm: viewModel) {
         }
 
         Log.d("routine", "All routine view recomposed")
-        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
             for (r in routines.value) {
                 key(r.name) {
                     RoutineView(r, vm)
