@@ -283,7 +283,6 @@ fun KeyValueRow(key: String, value: Any) {
 fun EditRoutine(vm: viewModel){
     val routine= vm.EditRoutine
 
-
     val name= routine.name
     var description= remember {
         mutableStateOf(routine.description)
@@ -294,20 +293,17 @@ fun EditRoutine(vm: viewModel){
     var exercises=vm.EditExercises
     val db= vm.getAppDatabase()
     val scope= CoroutineScope(Dispatchers.IO)
+    var hasValidationErrors = remember { mutableStateOf(false) }
 
     BackHandler() {
         vm.changeNavigationString("see all routines")
     }
 
-
     Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
         TextField(modifier=Modifier.fillMaxWidth(),value = description.value, onValueChange = { description.value=it; routine.description=it }, label = { Text("Enter routine description") })
         Text("Exercises",color = MaterialTheme.colors.onBackground )
         for(ex in exercises){
-
-            // key to identify exercise
             key(ex.name.value) {
-
                 Column {
                     TextField(
                         modifier = Modifier.fillMaxWidth(),
@@ -329,48 +325,141 @@ fun EditRoutine(vm: viewModel){
                         value = ex.steps.value.joinToString("\n"),
                         onValueChange = { ex.steps.value = it.split("\n") },
                         label = { Text("Enter exercise steps") })
+                    
+                    // Sets field with validation
+                    var setsError = remember { mutableStateOf<String?>(null) }
                     TextField(
                         modifier = Modifier.fillMaxWidth(),
                         value = ex.sets.value.toString(),
-                        onValueChange = {
-                            if (it == "") return@TextField;
-                                ex.sets.value=it.toInt()
-                        }
-                            ,label = { Text("Enter number of sets") })
+                        onValueChange = { 
+                            if (it == "") {
+                                setsError.value = "Number of sets cannot be empty"
+                                hasValidationErrors.value = true
+                                return@TextField
+                            }
+                            try {
+                                val value = it.toInt()
+                                if (value <= 0) {
+                                    setsError.value = "Number of sets must be greater than 0"
+                                    hasValidationErrors.value = true
+                                } else {
+                                    ex.sets.value = value
+                                    setsError.value = null
+                                    hasValidationErrors.value = false
+                                }
+                            } catch (e: NumberFormatException) {
+                                setsError.value = "Please enter a valid number"
+                                hasValidationErrors.value = true
+                            }
+                        },
+                        label = { Text("Enter number of sets") },
+                        isError = setsError.value != null
+                    )
+                    setsError.value?.let { Text(it, color = Color.Red) }
+
+                    // Rest field with validation
+                    var restError = remember { mutableStateOf<String?>(null) }
                     TextField(
                         modifier = Modifier.fillMaxWidth(),
                         value = ex.rest.value.toString(),
                         onValueChange = {
-                            if (it == "") return@TextField;
-
-                                ex.rest.value=it.toInt()
-
+                            if (it == "") {
+                                restError.value = "Rest time cannot be empty"
+                                hasValidationErrors.value = true
+                                return@TextField
+                            }
+                            try {
+                                val value = it.toInt()
+                                if (value < 0) {
+                                    restError.value = "Rest time cannot be negative"
+                                    hasValidationErrors.value = true
+                                } else {
+                                    ex.rest.value = value
+                                    restError.value = null
+                                    hasValidationErrors.value = false
+                                }
+                            } catch (e: NumberFormatException) {
+                                restError.value = "Please enter a valid number"
+                                hasValidationErrors.value = true
+                            }
                         },
-                        label = { Text("Enter rest between sets") })
+                        label = { Text("Enter rest between sets") },
+                        isError = restError.value != null
+                    )
+                    restError.value?.let { Text(it, color = Color.Red) }
+
+                    // Rest time field with validation
+                    var restTimeError = remember { mutableStateOf<String?>(null) }
                     TextField(
                         modifier = Modifier.fillMaxWidth(),
                         value = ex.restTime.value.toString(),
                         onValueChange = {
-                            if (it == "") return@TextField; ex.restTime.value = it.toFloat();
+                            if (it == "") {
+                                restTimeError.value = "Rest time cannot be empty"
+                                hasValidationErrors.value = true
+                                return@TextField
+                            }
+                            try {
+                                val value = it.toFloat()
+                                if (value < 0) {
+                                    restTimeError.value = "Rest time cannot be negative"
+                                    hasValidationErrors.value = true
+                                } else {
+                                    ex.restTime.value = value
+                                    restTimeError.value = null
+                                    hasValidationErrors.value = false
+                                }
+                            } catch (e: NumberFormatException) {
+                                restTimeError.value = "Please enter a valid number"
+                                hasValidationErrors.value = true
+                            }
                         },
                         label = {
                             Text(
-                                "Enter rest in days. These many days will be skipped before this exercise is scheduled again. Make sure that exercises in same category have same value for this field. ",
+                                "Enter rest in days. These many days will be skipped before this exercise is scheduled again. Make sure that exercises in same category have same value for this field.",
                                 color = MaterialTheme.colors.onBackground
                             )
-                        })
+                        },
+                        isError = restTimeError.value != null
+                    )
+                    restTimeError.value?.let { Text(it, color = Color.Red) }
+
+                    // Category field with validation
+                    var categoryError = remember { mutableStateOf<String?>(null) }
                     TextField(
                         modifier = Modifier.fillMaxWidth(),
                         value = if (ex.category.value != null) ex.category.value.toString() else "1",
                         onValueChange = {
-                            if (it == "") return@TextField; ex.category.value = it.toInt()
+                            if (it == "") {
+                                categoryError.value = "Category cannot be empty"
+                                hasValidationErrors.value = true
+                                return@TextField
+                            }
+                            try {
+                                val value = it.toInt()
+                                if (value <= 0) {
+                                    categoryError.value = "Category must be greater than 0"
+                                    hasValidationErrors.value = true
+                                } else {
+                                    ex.category.value = value
+                                    categoryError.value = null
+                                    hasValidationErrors.value = false
+                                }
+                            } catch (e: NumberFormatException) {
+                                categoryError.value = "Please enter a valid number"
+                                hasValidationErrors.value = true
+                            }
                         },
                         label = {
                             Text(
                                 "Enter exercise category. Exercises in different category will never be allowed in the same day.",
                                 color = MaterialTheme.colors.onBackground
                             )
-                        })
+                        },
+                        isError = categoryError.value != null
+                    )
+                    categoryError.value?.let { Text(it, color = Color.Red) }
+
                     Row {
                         Text("Is exercise timed?", color = MaterialTheme.colors.onBackground)
                         Checkbox(
@@ -380,52 +469,99 @@ fun EditRoutine(vm: viewModel){
                     }
 
                     if (ex.isTimed.value) {
+                        // Time field with validation
+                        var timeError = remember { mutableStateOf<String?>(null) }
                         TextField(
                             modifier = Modifier.fillMaxWidth(),
                             value = ex.time.value.toString(),
                             onValueChange = {
                                 if (it == "") {
+                                    timeError.value = "Time cannot be empty"
+                                    hasValidationErrors.value = true
                                     return@TextField
                                 }
-                                ex.time.value = it.toInt()
+                                try {
+                                    val value = it.toInt()
+                                    if (value <= 0) {
+                                        timeError.value = "Time must be greater than 0"
+                                        hasValidationErrors.value = true
+                                    } else {
+                                        ex.time.value = value
+                                        timeError.value = null
+                                        hasValidationErrors.value = false
+                                    }
+                                } catch (e: NumberFormatException) {
+                                    timeError.value = "Please enter a valid number"
+                                    hasValidationErrors.value = true
+                                }
                             },
                             label = {
                                 Text(
                                     "Enter time for exercise",
                                     color = MaterialTheme.colors.onBackground
                                 )
-                            })
+                            },
+                            isError = timeError.value != null
+                        )
+                        timeError.value?.let { Text(it, color = Color.Red) }
                     } else {
+                        // Reps field with validation
+                        var repsError = remember { mutableStateOf<String?>(null) }
                         TextField(
                             modifier = Modifier.fillMaxWidth(),
                             value = ex.reps.value.toString(),
                             onValueChange = {
                                 if (it == "") {
+                                    repsError.value = "Reps cannot be empty"
+                                    hasValidationErrors.value = true
                                     return@TextField
                                 }
-
-                                ex.reps.value = it.toInt()
+                                try {
+                                    val value = it.toInt()
+                                    if (value <= 0) {
+                                        repsError.value = "Reps must be greater than 0"
+                                        hasValidationErrors.value = true
+                                    } else {
+                                        ex.reps.value = value
+                                        repsError.value = null
+                                        hasValidationErrors.value = false
+                                    }
+                                } catch (e: NumberFormatException) {
+                                    repsError.value = "Please enter a valid number"
+                                    hasValidationErrors.value = true
+                                }
                             },
                             label = {
                                 Text(
                                     "Enter number of reps",
                                     color = MaterialTheme.colors.onBackground
                                 )
-                            })
+                            },
+                            isError = repsError.value != null
+                        )
+                        repsError.value?.let { Text(it, color = Color.Red) }
                     }
                 }
             }
         }
-        Button(onClick = {
-            scope.launch {
-                for(ex in exercises){
-                    db.exerciseDao().deleteThisExercise(ex.name.value)
-                    db.exerciseDao().insertExercise(ex.toExercise())
+        Button(
+            onClick = {
+                if (!hasValidationErrors.value) {
+                    scope.launch {
+                        for(ex in exercises){
+                            db.exerciseDao().deleteThisExercise(ex.name.value)
+                            db.exerciseDao().insertExercise(ex.toExercise())
+                        }
+                        vm.changeNavigationString("home")
+                    }
                 }
-                vm.changeNavigationString("home")
-            }
-        }) {
-            Text("Save routine",color = Color.White )
+            },
+            enabled = !hasValidationErrors.value
+        ) {
+            Text("Save routine", color = Color.White)
+        }
+        if (hasValidationErrors.value) {
+            Text("Please fix all validation errors before saving", color = Color.Red)
         }
     }
 }
@@ -870,91 +1006,218 @@ fun RestScreen(vm: viewModel) {
         var sets = remember { mutableStateOf(0) }
         var rest = remember { mutableStateOf(0f) }
         var category = remember { mutableStateOf(0) }
-        var restInDays= remember { mutableStateOf(0f) }
-        val showHints=remember {
-            mutableStateOf(false)
-        }
-
-
+        var restInDays = remember { mutableStateOf(0f) }
+        var hasValidationErrors = remember { mutableStateOf(false) }
 
         Column() {
             TextField(modifier=Modifier.fillMaxWidth(),
                 value = "${name.value}",
-                onValueChange = { name.value = it;exercise.name = it
-                                Log.d("ExerciseInput","${exercise.name}, ${vm.exercisesGettingCreatedNow.value[vm.exercisesGettingCreatedNow.value.size - 1].name}")
-                                },
-                label = { Text("Enter exercise name",color = MaterialTheme.colors.onBackground ) })
+                onValueChange = { name.value = it; exercise.name = it },
+                label = { Text("Enter exercise name", color = MaterialTheme.colors.onBackground) })
+
             TextField(modifier=Modifier.fillMaxWidth(),
                 value = "${description.value}",
-                onValueChange = { description.value = it;exercise.description = it },
-                label = { Text("Enter exercise description",color = MaterialTheme.colors.onBackground ) })
+                onValueChange = { description.value = it; exercise.description = it },
+                label = { Text("Enter exercise description", color = MaterialTheme.colors.onBackground) })
+
             TextField(modifier=Modifier.fillMaxWidth(),
                 value = "${steps.value}",
-                onValueChange = { steps.value = it;exercise.steps = it.split("\n") },
-                label = { Text("Enter exercise steps",color = MaterialTheme.colors.onBackground ) })
+                onValueChange = { steps.value = it; exercise.steps = it.split("\n") },
+                label = { Text("Enter exercise steps", color = MaterialTheme.colors.onBackground) })
+
+            // Rest in days field with validation
+            var restInDaysError = remember { mutableStateOf<String?>(null) }
             TextField(modifier=Modifier.fillMaxWidth(),
                 value = "${restInDays.value}",
-                onValueChange = {if(it=="") return@TextField;  restInDays.value = it.toFloat();exercise.restTime = it.toFloat() },
-                label = { Text("Enter rest in days. These many days will be skipped before this exercise is scheduled again.  Make sure that exercises in same category have same value for this field. ",color = MaterialTheme.colors.onBackground ) })
+                onValueChange = {
+                    if (it == "") {
+                        restInDaysError.value = "Rest time cannot be empty"
+                        hasValidationErrors.value = true
+                        return@TextField
+                    }
+                    try {
+                        val value = it.toFloat()
+                        if (value < 0) {
+                            restInDaysError.value = "Rest time cannot be negative"
+                            hasValidationErrors.value = true
+                        } else {
+                            restInDays.value = value
+                            exercise.restTime = value
+                            restInDaysError.value = null
+                            hasValidationErrors.value = false
+                        }
+                    } catch (e: NumberFormatException) {
+                        restInDaysError.value = "Please enter a valid number"
+                        hasValidationErrors.value = true
+                    }
+                },
+                label = { Text("Enter rest in days. These many days will be skipped before this exercise is scheduled again. Make sure that exercises in same category have same value for this field.", color = MaterialTheme.colors.onBackground) },
+                isError = restInDaysError.value != null
+            )
+            restInDaysError.value?.let { Text(it, color = Color.Red) }
+
+            // Sets field with validation
+            var setsError = remember { mutableStateOf<String?>(null) }
             TextField(modifier=Modifier.fillMaxWidth(),
                 value = "${sets.value}",
                 onValueChange = {
                     if (it == "") {
+                        setsError.value = "Number of sets cannot be empty"
+                        hasValidationErrors.value = true
                         return@TextField
                     }
-                    sets.value = it.toInt();exercise.sets = it.toInt();
-
+                    try {
+                        val value = it.toInt()
+                        if (value <= 0) {
+                            setsError.value = "Number of sets must be greater than 0"
+                            hasValidationErrors.value = true
+                        } else {
+                            sets.value = value
+                            exercise.sets = value
+                            setsError.value = null
+                            hasValidationErrors.value = false
+                        }
+                    } catch (e: NumberFormatException) {
+                        setsError.value = "Please enter a valid number"
+                        hasValidationErrors.value = true
+                    }
                 },
-                label = { Text("Enter number of sets",color = MaterialTheme.colors.onBackground ) })
+                label = { Text("Enter number of sets", color = MaterialTheme.colors.onBackground) },
+                isError = setsError.value != null
+            )
+            setsError.value?.let { Text(it, color = Color.Red) }
+
+            // Rest field with validation
+            var restError = remember { mutableStateOf<String?>(null) }
             TextField(modifier=Modifier.fillMaxWidth(),
                 value = "${rest.value}",
                 onValueChange = {
                     if (it == "") {
+                        restError.value = "Rest time cannot be empty"
+                        hasValidationErrors.value = true
                         return@TextField
                     }
-                    rest.value = it.toFloat();exercise.rest = it.toFloat();
-
+                    try {
+                        val value = it.toFloat()
+                        if (value < 0) {
+                            restError.value = "Rest time cannot be negative"
+                            hasValidationErrors.value = true
+                        } else {
+                            rest.value = value
+                            exercise.rest = value
+                            restError.value = null
+                            hasValidationErrors.value = false
+                        }
+                    } catch (e: NumberFormatException) {
+                        restError.value = "Please enter a valid number"
+                        hasValidationErrors.value = true
+                    }
                 },
-                label = { Text("Enter rest between sets",color = MaterialTheme.colors.onBackground ) })
-            TextField(modifier=Modifier.fillMaxWidth(),value = "${category.value}", onValueChange = {
-                if (it == "") {
-                    return@TextField
-                }
-                category.value = it.toInt();exercise.category = it.toInt()
+                label = { Text("Enter rest between sets", color = MaterialTheme.colors.onBackground) },
+                isError = restError.value != null
+            )
+            restError.value?.let { Text(it, color = Color.Red) }
 
-            }, label = {
-                Text("Enter exercise category. Exercises in different category will never be allowed in the same day.",color = MaterialTheme.colors.onBackground )
-            })
+            // Category field with validation
+            var categoryError = remember { mutableStateOf<String?>(null) }
+            TextField(modifier=Modifier.fillMaxWidth(),
+                value = "${category.value}",
+                onValueChange = {
+                    if (it == "") {
+                        categoryError.value = "Category cannot be empty"
+                        hasValidationErrors.value = true
+                        return@TextField
+                    }
+                    try {
+                        val value = it.toInt()
+                        if (value <= 0) {
+                            categoryError.value = "Category must be greater than 0"
+                            hasValidationErrors.value = true
+                        } else {
+                            category.value = value
+                            exercise.category = value
+                            categoryError.value = null
+                            hasValidationErrors.value = false
+                        }
+                    } catch (e: NumberFormatException) {
+                        categoryError.value = "Please enter a valid number"
+                        hasValidationErrors.value = true
+                    }
+                },
+                label = { Text("Enter exercise category. Exercises in different category will never be allowed in the same day.", color = MaterialTheme.colors.onBackground) },
+                isError = categoryError.value != null
+            )
+            categoryError.value?.let { Text(it, color = Color.Red) }
+
             Row {
-                Text("Is exercise timed?",color = MaterialTheme.colors.onBackground )
+                Text("Is exercise timed?", color = MaterialTheme.colors.onBackground)
                 Checkbox(modifier=Modifier.fillMaxWidth(),
                     checked = isTimed.value,
-                    onCheckedChange = { isTimed.value = it;exercise.isTimed = it
-
-                    })
+                    onCheckedChange = { isTimed.value = it; exercise.isTimed = it })
             }
 
             if (isTimed.value == true) {
+                // Time field with validation
+                var timeError = remember { mutableStateOf<String?>(null) }
                 TextField(modifier=Modifier.fillMaxWidth(),
                     value = "${time.value}",
                     onValueChange = {
                         if (it == "") {
+                            timeError.value = "Time cannot be empty"
+                            hasValidationErrors.value = true
                             return@TextField
                         }
-                        time.value = it.toInt();
-                        exercise.time = it.toInt()
+                        try {
+                            val value = it.toInt()
+                            if (value <= 0) {
+                                timeError.value = "Time must be greater than 0"
+                                hasValidationErrors.value = true
+                            } else {
+                                time.value = value
+                                exercise.time = value
+                                timeError.value = null
+                                hasValidationErrors.value = false
+                            }
+                        } catch (e: NumberFormatException) {
+                            timeError.value = "Please enter a valid number"
+                            hasValidationErrors.value = true
+                        }
                     },
-                    label = { Text("Enter time for exercise",color = MaterialTheme.colors.onBackground ) })
+                    label = { Text("Enter time for exercise", color = MaterialTheme.colors.onBackground) },
+                    isError = timeError.value != null
+                )
+                timeError.value?.let { Text(it, color = Color.Red) }
             } else {
+                // Reps field with validation
+                var repsError = remember { mutableStateOf<String?>(null) }
                 TextField(modifier=Modifier.fillMaxWidth(),
                     value = "${reps.value}",
                     onValueChange = {
                         if (it == "") {
+                            repsError.value = "Reps cannot be empty"
+                            hasValidationErrors.value = true
                             return@TextField
                         }
-                        ;reps.value = it.toInt();exercise.reps = it.toInt()
+                        try {
+                            val value = it.toInt()
+                            if (value <= 0) {
+                                repsError.value = "Reps must be greater than 0"
+                                hasValidationErrors.value = true
+                            } else {
+                                reps.value = value
+                                exercise.reps = value
+                                repsError.value = null
+                                hasValidationErrors.value = false
+                            }
+                        } catch (e: NumberFormatException) {
+                            repsError.value = "Please enter a valid number"
+                            hasValidationErrors.value = true
+                        }
                     },
-                    label = { Text("Enter number of reps",color = MaterialTheme.colors.onBackground ) })
+                    label = { Text("Enter number of reps", color = MaterialTheme.colors.onBackground) },
+                    isError = repsError.value != null
+                )
+                repsError.value?.let { Text(it, color = Color.Red) }
             }
         }
     }
