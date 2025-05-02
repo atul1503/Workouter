@@ -1,7 +1,13 @@
 package com.atul.workouter
 
 import android.content.Context
+import android.media.AudioAttributes
+import android.media.AudioFocusRequest
+import android.media.AudioManager
+import android.os.Build
 import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
+import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -11,6 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.util.Date
+import java.util.HashMap
 
 class viewModel: ViewModel() {
     var navigationString= mutableStateOf("home")
@@ -30,7 +37,11 @@ class viewModel: ViewModel() {
 
     var tts : TextToSpeech?=null
     var ctx: Context?=null
-
+    
+    // Audio focus variables
+    private var audioManager: AudioManager? = null
+    private var audioFocusRequest: AudioFocusRequest? = null
+    private var audioFocusGained = false
 
 
     fun deleteRoutine(name: String){
@@ -44,12 +55,93 @@ class viewModel: ViewModel() {
 
     }
 
+    private fun setupAudioFocus() {
+        if (audioManager == null && ctx != null) {
+            audioManager = ctx!!.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            
+            if (tts != null) {
+                tts!!.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+                    override fun onStart(utteranceId: String?) {
+                        requestAudioFocus()
+                    }
+
+                    override fun onDone(utteranceId: String?) {
+                        abandonAudioFocus()
+                    }
+
+                    @Deprecated("Deprecated in Java")
+                    override fun onError(utteranceId: String?) {
+                        abandonAudioFocus()
+                    }
+                })
+            }
+        }
+    }
+
+    private fun requestAudioFocus() {
+        if (audioManager == null) return
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val audioAttributes = AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                .build()
+                
+            audioFocusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK)
+                .setAudioAttributes(audioAttributes)
+                .setAcceptsDelayedFocusGain(true)
+                .setOnAudioFocusChangeListener { focusChange ->
+                    when (focusChange) {
+                        AudioManager.AUDIOFOCUS_GAIN -> {
+                            audioFocusGained = true
+                        }
+                        AudioManager.AUDIOFOCUS_LOSS, 
+                        AudioManager.AUDIOFOCUS_LOSS_TRANSIENT,
+                        AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
+                            audioFocusGained = false
+                        }
+                    }
+                }
+                .build()
+                
+            val result = audioManager!!.requestAudioFocus(audioFocusRequest!!)
+            audioFocusGained = result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
+            Log.d("AudioFocus", "Request result: ${if (audioFocusGained) "granted" else "denied"}")
+        } else {
+            @Suppress("DEPRECATION")
+            val result = audioManager!!.requestAudioFocus(
+                { focusChange ->
+                    audioFocusGained = focusChange == AudioManager.AUDIOFOCUS_GAIN
+                },
+                AudioManager.STREAM_MUSIC,
+                AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK
+            )
+            audioFocusGained = result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
+        }
+    }
+
+    private fun abandonAudioFocus() {
+        if (audioManager == null) return
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (audioFocusRequest != null) {
+                audioManager!!.abandonAudioFocusRequest(audioFocusRequest!!)
+                audioFocusGained = false
+                Log.d("AudioFocus", "Focus abandoned")
+            }
+        } else {
+            @Suppress("DEPRECATION")
+            audioManager!!.abandonAudioFocus(null)
+            audioFocusGained = false
+        }
+    }
 
     fun getTextToSpeech(): TextToSpeech {
         if(tts==null){
             tts=TextToSpeech(ctx, TextToSpeech.OnInitListener { status ->
                 if (status != TextToSpeech.ERROR) {
                     tts!!.language = ctx!!.resources.configuration.locales[0]
+                    setupAudioFocus()
                 }
             })
             return tts!!
@@ -179,7 +271,26 @@ class viewModel: ViewModel() {
         db!!.routineDao().updateLastDoneCategory(exercise.category!!,exercise.routineName)
     }
 
+    override fun onCleared() {
+        super.onCleared()
+        abandonAudioFocus()
+        tts?.shutdown()
+    }
 
+    // Override speak method to ensure utterance ID is always set for audio focus management
+    fun speak(text: String) {
+        val tts = getTextToSpeech()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            val params = android.os.Bundle()
+            params.putString(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, "workouterUtteranceId")
+            tts.speak(text, TextToSpeech.QUEUE_FLUSH, params, "workouterUtteranceId")
+        } else {
+            val params = HashMap<String, String>()
+            params[TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID] = "workouterUtteranceId"
+            @Suppress("DEPRECATION")
+            tts.speak(text, TextToSpeech.QUEUE_FLUSH, params)
+        }
+    }
 }
 
 

@@ -658,17 +658,17 @@ fun RestScreen(vm: viewModel) {
                     Thread.sleep(1000)
                     if(!vm.getTextToSpeech().isSpeaking && !saidSpeech){
                         if(vm.isOnRest.value){
-                            vm.getTextToSpeech().speak("take rest",TextToSpeech.QUEUE_FLUSH, null, null)
+                            vm.speak("take rest")
                             saidSpeech=true
                         }else{
-                            vm.getTextToSpeech().speak("start ${vm.getExercisesThatCanBeDoneToday()[vm.currentExerciseIndex.value].name}",TextToSpeech.QUEUE_FLUSH, null, null)
+                            vm.speak("start ${vm.getExercisesThatCanBeDoneToday()[vm.currentExerciseIndex.value].name}")
                             saidSpeech=true
                         }
                     }
                     Log.d("ExerciseTimer","This is the time of timer: ${curr.value}")
                 }
                 if(vm.isOnRest.value){
-                    vm.getTextToSpeech().speak("Rest is over.",TextToSpeech.QUEUE_FLUSH, null, null)
+                    vm.speak("Rest is over.")
                 }
                 callback()
 
@@ -709,12 +709,7 @@ fun RestScreen(vm: viewModel) {
                     KeyValueRow(key = "Exercise Steps", value = exercise.steps)
 
                     if (!vm.getTextToSpeech().isSpeaking) {
-                        vm.getTextToSpeech().speak(
-                            "start ${vm.getExercisesThatCanBeDoneToday()[vm.currentExerciseIndex.value].name}",
-                            TextToSpeech.QUEUE_FLUSH,
-                            null,
-                            null
-                        )
+                        vm.speak("start ${vm.getExercisesThatCanBeDoneToday()[vm.currentExerciseIndex.value].name}")
                     }
 
                     KeyValueRow(key = "Rest after each set", value = exercise.rest)
